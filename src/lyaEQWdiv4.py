@@ -12,7 +12,7 @@ def read_S99file(txt_file):
 
 # Path to the files
 path_results = '../results/plots'
-S99 = glob.glob('../Starburst99/round3/*')
+S99 = glob.glob('../Starburst99/round2/*')
 
 constant_ste = []
 constant_neb = []
@@ -21,18 +21,18 @@ fixed_ste = []
 fixed_neb = []
 fixed_tot = []
 i = 0
-IMFs = ['0.5',
-        '1.3']#,
-        #'1.4',
-        #'1.5',
-        #'1.6',
-        #'1.7',
-        #'1.8',
-        #'1.9', 
-        #'2.0', 
-        #'2.1',
-        #'2.2',
-        #'2.3']
+IMFs = [#'0.5',
+        '1.3',
+        '1.4',
+        '1.5',
+        '1.6',
+        '1.7',
+        '1.8',
+        '1.9', 
+        '2.0', 
+        '2.1',
+        '2.2',
+        '2.3']
 
 total_chosenfiles = []
 colors = ['blue', 'red', 'green', 'magenta', '#994A2B', '#2B494A', '#7E1BE0', '#1BE0D3', '#E0531B', '#94E01B', '#9868C4']
@@ -103,7 +103,7 @@ for foldr in total_chosenfiles:
             #age.append(data[0][j]/1e6)            # age in mega years    
             #age.append(numpy.log10(data[0][j]))   # age in log
             age.append(data[0][j])                 # age in scientific notation
-            eqwlya.append(data[7][j])        
+            eqwlya.append(data[7][j]*(-1))         # the negative sign is because these EQWs are in absorption
         
     # length check
     while len(eqwlya) > len(neb_age_and_eqw[1]):
@@ -161,30 +161,32 @@ for foldr in total_chosenfiles:
         
     i = i+1
     
-lower = 5
-upper = 9
+lower = 6.3
+upper = 8
 pyplot.figure(1)
 pyplot.title('Instantaneous SFR')
 pyplot.xlabel('log age [yr]')
 pyplot.ylabel('Ly-alpha EQW [$\AA$]')
-#pyplot.xlim(lower, upper)
+pyplot.xlim(lower, upper)
 #pyplot.ylim(-15, 225)
-pyplot.text(6.05, 7, 'stellar component')   
-pyplot.text(6.05, 100, 'nebular')   
-pyplot.text(6.05, 90, 'component')   
-pyplot.text(6.65, 100, 'total=nebular+stellar')  
-pyplot.text(9.05, 211, 'IMF exp')  
+pyplot.text(6.32, -15, 'stellar component')   
+pyplot.text(6.33, 100, 'total=')   
+pyplot.text(6.33, 89, 'nebular')   
+pyplot.text(6.36, 78, '+')  
+pyplot.text(6.33, 66, 'stellar')
+pyplot.text(6.6, 100, 'nebular component')  
+pyplot.text(8.01, 186 , 'IMF exp')  
  
 pyplot.figure(2)
 pyplot.title('Constant SFR') 
 pyplot.xlabel('log age [yr]')
 pyplot.ylabel('Ly-alpha EQW [$\AA$]')
-#pyplot.xlim(lower, upper)
+pyplot.xlim(lower, upper)
 #pyplot.ylim(-15, 170)
-pyplot.text(6.05, 6, 'stellar component')   
-pyplot.text(7.95, 76, 'nebular component')   
-pyplot.text(7.95, 168, 'total=nebular+stellar')   
-pyplot.text(9.05, 250, 'IMF exp')   
+pyplot.text(6.4, 6, 'stellar component')   
+pyplot.text(7.3, 69, 'total=nebular+stellar')   
+pyplot.text(7.3, 168, 'nebular component')   
+pyplot.text(8.01, 236, 'IMF exp')   
 
 # Ploting
 curves_inst = []
@@ -211,8 +213,8 @@ for t in leg1.get_texts():
     t.set_fontsize('small')     
 for t in leg2.get_texts():
     t.set_fontsize('small')     
-pyplot.show()
-'''
+#pyplot.show()
+
 # Saving the plots
 pyplot.figure(1)
 epsfile = os.path.join(path_results, "Inst_log2.eps")
@@ -222,4 +224,4 @@ pyplot.figure(2)
 epsfile = os.path.join(path_results, "Const_log2.eps")
 pyplot.ion()
 pyplot.savefig(epsfile)
-'''
+
