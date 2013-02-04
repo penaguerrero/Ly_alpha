@@ -2,8 +2,11 @@ import os
 import glob
 import numpy
 import table
+import matplotlib
+matplotlib.use("macosx")
 from spectrum import pyplot
 from spectrum import spectrum
+from random import randrange
 
 
 def read_S99file(txt_file):
@@ -35,7 +38,18 @@ IMFs = [#'0.5',
         '2.3']
 
 total_chosenfiles = []
-colors = ['blue', 'red', 'green', 'magenta', '#994A2B', '#2B494A', '#7E1BE0', '#1BE0D3', '#E0531B', '#94E01B', '#9868C4']
+#colors = ['blue', 'red', 'green', 'magenta', '#994A2B', '#2B494A', '#7E1BE0', '#1BE0D3', '#E0531B', '#94E01B', '#9868C4']
+file_count = 11
+colors = []
+
+def generate_colors(count):
+    '''return value is list containing count number of colors '''
+    colors = []
+    for _ in range(file_count):
+        colors.append("#%s" % "".join([hex(randrange(1, 254))[2:] for _ in range(3)]))
+    return colors
+
+colors = generate_colors(file_count)
 
 # This loop only choses the selected IMFs to annalyze the files and create the plots
 for each_folder in S99:
@@ -163,7 +177,7 @@ for foldr in total_chosenfiles:
     
 lower = 6.3
 upper = 8
-pyplot.figure(1)
+pyplot.figure(1, figsize=(10, 10))
 pyplot.title('Instantaneous SFR')
 pyplot.xlabel('log age [yr]')
 pyplot.ylabel('Ly-alpha EQW [$\AA$]')
@@ -177,7 +191,7 @@ pyplot.text(6.33, 66, 'stellar')
 pyplot.text(6.6, 100, 'nebular component')  
 pyplot.text(8.01, 186 , 'IMF exp')  
  
-pyplot.figure(2)
+pyplot.figure(2, figsize=(10,10))
 pyplot.title('Constant SFR') 
 pyplot.xlabel('log age [yr]')
 pyplot.ylabel('Ly-alpha EQW [$\AA$]')
@@ -213,15 +227,22 @@ for t in leg1.get_texts():
     t.set_fontsize('small')     
 for t in leg2.get_texts():
     t.set_fontsize('small')     
-#pyplot.show()
-
+pyplot.show()
+'''
 # Saving the plots
 pyplot.figure(1)
-epsfile = os.path.join(path_results, "Inst_log2.eps")
-pyplot.ion()
-pyplot.savefig(epsfile)
+epsfile = os.path.join(path_results, "Inst_log2.svg")
+pyplot.savefig(epsfile, dpi=(100))
+epsfile = os.path.join(path_results, "Inst_log2.pdf")
+pyplot.savefig(epsfile, dpi=(100))
+epsfile = os.path.join(path_results, "Inst_log2.png")
+pyplot.savefig(epsfile, dpi=(100))
+epsfile = os.path.join(path_results, "Inst_log2.ps")
+pyplot.savefig(epsfile, dpi=(100))
+
+
 pyplot.figure(2)
 epsfile = os.path.join(path_results, "Const_log2.eps")
 pyplot.ion()
 pyplot.savefig(epsfile)
-
+'''
