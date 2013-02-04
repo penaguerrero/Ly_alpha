@@ -71,19 +71,19 @@ def area_under_curve(x1, x2): # Using Riemann Sum
         
 # Path to files
 Bstarpath = '../Tlusty/solar/BGuvspec_v10/'
-Bstarpath2 = '../Tlusty/solar/BGuvspec_v2/'
+Bstarpath2 = '../Tlusty/BLuvspec_v2/'
 
 # Detailed spectrum files
-#specs = glob.glob(Bstarpath+'*.uv.7') # microturbulent velocity of 10
+#specs = glob.glob(Bstarpath2+'*.uv.7') # microturbulent velocity of 10
 #specs = glob.glob(Bstarpath2+'*.uv.7')
-specs = ['BL30000g425v2.uv.7', 'BL30000g425v2.uv.7']
+specs = glob.glob(Bstarpath2+'BL30000g425v2.uv.7')
 
 # Detailed continuum files
-#conts = glob.glob(Bstarpath+'*.uv.17') # microturbulent velocity of 10
+#conts = glob.glob(Bstarpath2+'*.uv.17') # microturbulent velocity of 10
 #conts = glob.glob(Bstarpath2+'*.uv.17')
-conts = ['BL30000g425v2.uv.17', 'BL30000g425v2.uv.17']
+conts = glob.glob(Bstarpath2+'BL30000g425v2.uv.17')
 
-path_results = '../results'
+path_results = '../results/good_star_specs'
 
 # MEASUREMENTS
 # Rest wavelength of Ly_alpha from NIST
@@ -93,13 +93,23 @@ Lyalpha = 1215.6701
 lowav = 1100.0
 upwav = 1350.0
 
-'''
+
 ### CREATING TEXT FILES OF SELECTED RANGES
 total_files = len(specs)
 print("%d files" % (total_files))
+v2 = 'v2'
+v10 = 'v10'
+# This is the dictionary of aliases and actual names
+logAliasBstars = {'Files divided': 'Alias'}
+logAliasBstars.update({'Files divided': 'Alias'})
+
 for i in range(0, total_files):
-    #bstar_result_path = os.path.join(path_results, 'Norm_Bstarv2_' + repr(i) + '.txt')
-    bstar_result_path = os.path.join(path_results, 'Norm_BL30000g425v2.txt')
+    if v2 in specs[i]:
+        bstar_result_path = os.path.join(path_results, 'Norm_Bstar_v2_' + repr(i) + '.txt')
+        #bstar_result_path = os.path.join(path_results, 'Norm_BL30000g425v2.txt')
+    elif v10 in specs[i]:
+        bstar_result_path = os.path.join(path_results, 'Norm_Bstar_v10_' + repr(i) + '.txt')
+        #bstar_result_path = os.path.join(path_results, 'Norm_BL30000g425v10.txt')
     A, cgs = numpy.loadtxt(specs[i], dtype=float, unpack=True)
     A_cont, cgs_cont = numpy.loadtxt(conts[i], dtype=float, unpack=True)
     print("%d of %d: [ %s, %s ] ... " % (i+1,total_files, os.path.basename(specs[i]), os.path.basename(conts[i])))
@@ -112,27 +122,49 @@ for i in range(0, total_files):
     rebin_spec, rebin_cont, cont_factor, spec_factor = spectrum.get_factors_and_rebin(spec_arr, cont_arr)
     # Dividing spectra over continuum
     norm_flx = rebin_spec[1] / rebin_cont[1]
+    '''
     # Writting to text files
     txtout = open(bstar_result_path, 'w+')
     for j in range(0, len(norm_flx)):
         txtout.write((rebin_spec[0][j].__repr__() + " " + norm_flx[j].__repr__()) + "\n")
     txtout.close()
     print("\n")
-    
+    '''
+    # Printing to the log for the Aliases
+    logAliasBstars.update({specs[i]: bstar_result_path})
+    logAliasBstars.update({conts[i]: ' '})
+
+logAliasBstars_filev2 = open(os.path.join(path_results, 'logAliasBstars_v10.txt'), 'w+')
+logAliasBstars_filev10 = open(os.path.join(path_results, 'logAliasBstars_v2.txt'), 'w+')
+if v2 in specs[i]:
+    for a in logAliasBstars:
+        print >> logAliasBstars_filev2, (a + "\n")
+elif v10 in specs[i]:
+    for a in logAliasBstars:
+        print >> logAliasBstars_filev10, (a + "\n")
+logAliasBstars_filev2.close()
+logAliasBstars_filev10.close()
+
 '''
 ### Calling the selected and converted files
-norm_stars = glob.glob(path_results+'/Norm_*.txt')
+norm_stars = glob.glob(path_results+'/Norm_B*_109.txt')
 for i in range(0, len(norm_stars)):
     print('Working with: %s' % (norm_stars[i]))
     wav, flx = numpy.loadtxt(norm_stars[i], dtype=float, unpack=True)
     spec_data = numpy.array([wav, flx])
-    eqw = area_under_curve(1200, 1232)
-    print('Ly-alpha EQW =', eqw)
-    '''
     ## Getting the continuum to measure EQW
-    conti = get_continuum(spec_data)
+    #conti = get_continuum(spec_data)
     ## THIS IS ONLY FOR THE NORMALIZED SPECTRA, WHERE THE THEORETICAL CONTINUUM APPLIES
     continuum_norm = spectrum.theo_cont(wav, scale_factor=1.0)
+    #print('data', spec_data)
+    ### Getting EQW
+    #eqw = area_under_curve(1200, 1232)
+    #eqw, lo, up = spectrum.EQW_iter(spec_data, continuum_norm, Lyalpha)
+    half_eqw, lo, up = spectrum.EQW(spec_data, continuum_norm, 1215.67, 1231.)
+    eqw = half_eqw * 2
+    print('Ly-alpha EQW = %f' % eqw)
+    print ' '
+    
     # Ploting just to check
     # the line to mark Ly_alpha
     lyalpha_arr_wav = []
@@ -146,10 +178,11 @@ for i in range(0, len(norm_stars)):
     pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(low, up)
     pyplot.suptitle(norm_stars[i])
-    pyplot.plot(wav, flx, 'b', conti[0], conti[1], 'magenta')
+    #pyplot.plot(wav, flx, 'b', conti[0], conti[1], 'magenta')
+    pyplot.plot(wav, flx, 'b', continuum_norm[0], continuum_norm[1], 'magenta')
     pyplot.plot(lyalpha_arr_wav, flx, 'r--')
     pyplot.show()
-    '''
+'''
 
 
         
