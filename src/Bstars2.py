@@ -71,17 +71,18 @@ def area_under_curve(x1, x2): # Using Riemann Sum
         
 # Path to files
 Bstarpath = '../Tlusty/solar/BGuvspec_v10/'
-Bstarpath2 = '../Tlusty/BLuvspec_v2/'
+Bstarpath2 = '../Tlusty/solar/BGuvspec_v2/'
+#Bstarpath2 = '../Tlusty/BLuvspec_v2/'
 
 # Detailed spectrum files
-#specs = glob.glob(Bstarpath2+'*.uv.7') # microturbulent velocity of 10
-#specs = glob.glob(Bstarpath2+'*.uv.7')
-specs = glob.glob(Bstarpath2+'BL30000g425v2.uv.7')
+#specs = glob.glob(Bstarpath+'*.uv.7') # microturbulent velocity of 10
+specs = glob.glob(Bstarpath2+'*.uv.7')
+#specs = glob.glob(Bstarpath2+'BL30000g425v2.uv.7')
 
 # Detailed continuum files
-#conts = glob.glob(Bstarpath2+'*.uv.17') # microturbulent velocity of 10
-#conts = glob.glob(Bstarpath2+'*.uv.17')
-conts = glob.glob(Bstarpath2+'BL30000g425v2.uv.17')
+#conts = glob.glob(Bstarpath+'*.uv.17') # microturbulent velocity of 10
+conts = glob.glob(Bstarpath2+'*.uv.17')
+#conts = glob.glob(Bstarpath2+'BL30000g425v2.uv.17')
 
 path_results = '../results/good_star_specs'
 
@@ -122,14 +123,14 @@ for i in range(0, total_files):
     rebin_spec, rebin_cont, cont_factor, spec_factor = spectrum.get_factors_and_rebin(spec_arr, cont_arr)
     # Dividing spectra over continuum
     norm_flx = rebin_spec[1] / rebin_cont[1]
-    '''
+    
     # Writting to text files
     txtout = open(bstar_result_path, 'w+')
     for j in range(0, len(norm_flx)):
         txtout.write((rebin_spec[0][j].__repr__() + " " + norm_flx[j].__repr__()) + "\n")
     txtout.close()
     print("\n")
-    '''
+    
     # Printing to the log for the Aliases
     logAliasBstars.update({specs[i]: bstar_result_path})
     logAliasBstars.update({conts[i]: ' '})
@@ -138,10 +139,10 @@ logAliasBstars_filev2 = open(os.path.join(path_results, 'logAliasBstars_v10.txt'
 logAliasBstars_filev10 = open(os.path.join(path_results, 'logAliasBstars_v2.txt'), 'w+')
 if v2 in specs[i]:
     for a in logAliasBstars:
-        print >> logAliasBstars_filev2, (a + "\n")
+        print >> logAliasBstars_filev2, a
 elif v10 in specs[i]:
     for a in logAliasBstars:
-        print >> logAliasBstars_filev10, (a + "\n")
+        print >> logAliasBstars_filev10, a
 logAliasBstars_filev2.close()
 logAliasBstars_filev10.close()
 
