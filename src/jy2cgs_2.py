@@ -81,44 +81,115 @@ fin_files = glob.glob(os.path.join(os.path.abspath(path_results),'*_fin_10*Acgs*
 # Load the text files
 for f in range(0, len(fin_files)):
     A, cgs = numpy.loadtxt(fin_files[f], dtype=numpy.float64, unpack=True)    
-    print('File loaded, now selecting desired range: %f to %f' % (lower_wave, upper_wave))
+    print('Lines file loaded, now selecting desired range: %f to %f' % (lower_wave, upper_wave))
     # Selecting the range for Ly_alpha
-    #print(A.shape, cgs.shape)
     #wav = A
-    #flx = cgs
+    #flx = cgs    
     wav, flx = selection(A, cgs, lower_wave, upper_wave)
     lines = numpy.array([wav, flx])
-
+    print('shape of lines_array', lines.shape)
+    
+    '''
+    ### Text file of Resolving Power of every wavelength
+    data_lines = numpy.array([A, cgs])
+    resol = open(path_results+'CMFGENResolvingPower.txt', 'w+')
+    resPow_avg = []
+    for line in A:
+        resPow = spectrum.resolving_power(line, data_lines)
+        resPow_avg.append(resPow)
+        print >> resol, line, resPow 
+        print('wavelength and R', line, resPow)
+    avgR = int(sum(resPow_avg)) / len(A)
+    print >> resol, 'Average Reolving Power of CMFGEN lines file = '
+    print >> resol, avgR
+    resol.close()
+    print('Average Reolving Power of CMFGEN lines file = %i' % (avgR))
+    '''
+    
     A_cont, cgs_cont = numpy.loadtxt(cont_files[f], dtype=numpy.float64, unpack=True)    
-    print('File loaded, now selecting desired range: %f to %f' % (lower_wave, upper_wave))
+    print('Continuum file loaded, now selecting desired range: %f to %f' % (lower_wave, upper_wave))
     # Selecting the range for Ly_alpha
-    #print(A.shape, cgs.shape)
     #wav_cont = A_cont
     #flx_cont = cgs_cont
     wav_cont, flx_cont = selection(A_cont, cgs_cont, lower_wave, upper_wave)
     continuum = numpy.array([wav_cont, flx_cont])
+    print('shape of continuum_array', continuum.shape)
         
     # Rebinning
-    lines_rebin, cont_rebin, new_cont_factor, new_lines_factor = spectrum.get_factors_and_rebin(lines, continuum, 100)
-    
+    lines_rebin, cont_rebin, new_cont_factor, new_lines_factor = spectrum.get_factors_and_rebin(lines, continuum, 250)
+    Resolution =  spectrum.resolving_power(Lyalpha, lines)  # R=20,000  for CMFGEN as indicated in Palacios et al. 2010, A&A
+    original_delta_lambda = Lyalpha / float(Resolution)
+    closest_lyA, idxLyA = spectrum.find_nearest(lines_rebin[0,:], Lyalpha)
+    diffLyA1 = lines_rebin[0, idxLyA+1] - closest_lyA
+    diffLyA2 = closest_lyA - lines_rebin[0, idxLyA-1]
+    new_delta_lambda = (diffLyA1 + diffLyA2) / 2.0
+    new_resolution = Lyalpha / new_delta_lambda
+    smoothing_factor = float(Resolution) / new_resolution
+    print 'original_delta_lambda and new_delta_lambda : %f, %f' % (original_delta_lambda, new_delta_lambda)
+    print 'Original resolution = %i  -----  new resolution = %i' % (Resolution, int(new_resolution))
+    print 'SMOOTHING FACTOR = %f' % (smoothing_factor)
+        
     # Normalization
-    norm_flx = lines_rebin[1] / cont_rebin[1]
+    norm_flx = lines_rebin[1,:] / cont_rebin[1,:]
     
     # Arrays for eqw measurements
     norm_lines = numpy.array([lines_rebin[0,:], norm_flx])
     cont_lines = spectrum.theo_cont(lines_rebin[0,:], scale_factor=1.0)
     
     # Measuring EQW
-    eqw_fixed = spectrum.EQW_lyA_fixed(norm_lines, cont_lines, 10.0)
-    eqw = spectrum.EQW(norm_lines, cont_lines, 1210.6, 1220.6)
+    lolim = 1210.67
+    uplim = 1220.67
+    eqw_fixed = spectrum.EQW_line_fixed(norm_lines, cont_lines, Lyalpha, 10.0)
+    eqw = spectrum.EQW(norm_lines, cont_lines, lolim, uplim)
     print ('This is the eqw with the "fixed" function = %f' % (eqw_fixed))
     print ('This is the eqw with the EQW function = %f' % (eqw))
     
+    # TEST for rebinning according to a desired delta_lambda
+    '''delta_lambda=0.456 is an average between the typical real observed dlta_lambdas of STIS (0.75) and COS (0.18)'''
+    desired_delta_lambda = 0.465
+    testlines_rebin, test_cont_rebin = spectrum.rebin_arrays_for_desired_resolution(desired_delta_lambda, Lyalpha, lines, continuum)
+    print('shape of testlines_rebin: %s    ----   shape of test_cont_rebin: %s' % (repr(testlines_rebin.shape), repr(test_cont_rebin.shape)))
+    #testing_eqw_iter, lo_testing_eqw_iter, up_testing_eqw_iter = spectrum.EQW_iter(testlines_rebin, test_cont_rebin, Lyalpha)
+    #print('testing_eqw_iter = %f, lo_testing_eqw_iter = %f, up_testing_eqw_iter = %f' % (testing_eqw_iter, lo_testing_eqw_iter, up_testing_eqw_iter))
+    testeqw_fixed = spectrum.EQW_line_fixed(testlines_rebin, test_cont_rebin, Lyalpha, 10.0)
+    print ('testeqw_fixed = %f' % (testeqw_fixed))
+
+    '''
+    # TEST with rebinning through interpolation
+    # since the lines array is much larger than the continuum array, this last one must be rebinned:
+    reference_wavelength = Lyalpha
+    # Making the continuum array the same size as the lines array.
+    rebinned_cont, rebinning_factor_cont = spectrum.rebinning_interpol(lines, continuum, reference_wavelength)
+    print 'This is the test for the rebinning function: factor = %f' % (rebinning_factor_cont)
+    norm_test = flx / rebinned_cont[1,:]
+    test_norm_lines = numpy.array([wav, norm_test])
+    test_norm_cont = spectrum.theo_cont(wav, scale_factor=1.0)
+    test1_eqw = spectrum.EQW_line_fixed(test_norm_lines, test_norm_cont, Lyalpha, 10.0)
+    test2_eqw = spectrum.EQW(test_norm_lines, test_norm_cont, lolim, uplim)
+    print ('Test eqw with the EQW "fixed" function = %f' % (test1_eqw))
+    print ('Test eqw with the EQW function = %f' % (test2_eqw))
+
+    # ANOTHER TEST with rebinning
+    rebin_lines_factor = 5.0
+    rebin_cont_factor = spectrum.finding_rebin_it_factor_for_small_arr(lines, continuum, rebin_lines_factor)
+    rebin_lines_array = spectrum.rebin_it(lines, rebin_lines_factor)    
+    rebin_cont_array = spectrum.rebin_it(continuum, rebin_cont_factor)
+    print 'Now testing the rebin_it function: factor for lines = %f, facotr for continuum %f' % (rebin_lines_factor, rebin_cont_factor)
+    norm_anothertest = flx / rebinned_cont[1,:]
+    anothertest_norm_lines = numpy.array([wav, norm_anothertest])
+    anothertest_norm_cont = spectrum.theo_cont(wav, scale_factor=1.0)
+    anothertest1_eqw = spectrum.EQW_line_fixed(anothertest_norm_lines, anothertest_norm_cont, Lyalpha, 10.0)
+    anothertest2_eqw = spectrum.EQW(anothertest_norm_lines, anothertest_norm_cont, 1210.67, 1220.67)
+    print ('Test eqw with the EQW "fixed" function = %f' % (anothertest1_eqw))
+    print ('Test eqw with the EQW function = %f' % (anothertest2_eqw))
+    '''
     # Ploting 
     # the line to mark Ly_alpha
     lyalpha_arr_wav = []
     for i in flx:
         lyalpha_arr_wav.append(Lyalpha)  
+    # area under eqw
+    #eqw_y = selection(lines_rebin[0], norm_flx, lolim, uplim)
     
     # Lines and Continuum
     # plot limits
@@ -131,13 +202,28 @@ for f in range(0, len(fin_files)):
     pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(low, up)
     pyplot.ylim(0, 3e-8)
-    #pyplot.suptitle(aka)
     pyplot.plot(wav, flx, 'b', lyalpha_arr_wav, flx, 'r--', wav_cont, flx_cont, 'g')
     
     pyplot.figure(2, figsize=(10, 10))
-    pyplot.title('Normalization')
+    pyplot.title('Normalization zoom function')
+    pyplot.xlim(low, up)
+    pyplot.ylim(0.4, 1.5)
     pyplot.plot(lines_rebin[0], norm_flx, 'b')
+    #pyplot.fill_between(eqw, eqw_y, 0,color='g')
     
+    '''    
+    pyplot.figure(3, figsize=(10, 10))
+    pyplot.title('Normalization interpolation')
+    pyplot.xlim(low, up)
+    pyplot.ylim(0.4, 1.5)
+    pyplot.plot(wav, norm_test, 'b')
+    
+    pyplot.figure(4, figsize=(10, 10))
+    pyplot.title('Normalization rebin_it')
+    pyplot.xlim(low, up)
+    pyplot.ylim(0.4, 1.5)
+    pyplot.plot(wav, norm_anothertest, 'b')
+    '''
     pyplot.show()
 
 
