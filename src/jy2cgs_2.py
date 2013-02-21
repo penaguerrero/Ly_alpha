@@ -25,12 +25,14 @@ def selection(A, cgs, lower, upper):
     return(A_selected, cgs_selected)
 
 # go into each temperature and get the lines and continuum files into a normal text file of angstroms and cgs
-def CMFGENfile_into2cols(path_CMFGEN, path_results, lower_wave, upper_wave):
+def CMFGENfile_into2cols(path_CMFGEN, path_results, lower_wave, upper_wave, templogg):
     # Find directory
     ogrid_dir = glob.glob(path_CMFGEN)
+    print('Now in %s' % ogrid_dir)
     for single_dir in ogrid_dir:
         dir_name = os.path.join(single_dir+'/obs/')
         print'Going into directory: %s' % (dir_name)
+        #files_to_use = ['obs_cont', 'obs_fin_10']
         files_to_use = ['obs_cont.fixed', 'obs_fin_10.fixed']
         for i in range(0, len(files_to_use)):
             file_in_use = dir_name + files_to_use[i]
@@ -47,14 +49,15 @@ def CMFGENfile_into2cols(path_CMFGEN, path_results, lower_wave, upper_wave):
             # Converting file into three columns: frequencies, janskies, error
             clausfile.clausfile(file_in_use, dest=os.path.join(path_results))
             # Converting into Angstroms and cgs to create a text file 
-            sp = spectrum.spectrum(file_in_use+"_1d")
+            sp = spectrum.spectrum(os.path.join(path_results+os.path.basename(file_in_use)+"_1d"))
             #sp.save2(file_in_use+"_Acgs.txt")
             output = (sp.A, sp.cgs)
-            spectrum.write_1d(os.path.join(os.path.abspath(path_results), file_name+"_Acgs.txt"), output)
-        
+            spectrum.write_1d(os.path.join(os.path.abspath(path_results), file_name+"_Acgs_"+templogg+".txt"), output)
+      
+  
 #### NOW DO THE WORK
 # This is where the directory is
-path_CMFGEN = '../ogrid_24jun09/test/*'
+path_CMFGEN = '../ogrid_24jun09/'
 path_results = '../results/OstarsCMFGEN/'
 if not os.path.exists(path_results):
     print("Path: %s does not exist!" % (path_results))
@@ -67,17 +70,27 @@ upper_wave = 1300.0
 Lyalpha = 1215.6701
 
 # Find directory
-ogrid_dir = glob.glob(path_CMFGEN)
+ogrid_dir = glob.glob('../ogrid_24jun09/*')
 
 # Generate 1d files of flux and wavelength
-#CMFGENfile_into2cols(path_CMFGEN, path_results, lower_wave, upper_wave)
+templogg_list = []
+for i in range(0, len(ogrid_dir)):
+    temp_basename = string.split(os.path.basename(ogrid_dir[i]), sep='NT')
+    templogg_list.append(temp_basename[1])
+
+''' THIS LOOP IS TO BE RUNNED WHEN NEEDING TO CONVERT CMFGEN FILES INTO 2 COLUMN FILES OF ANGSTROMS AND CGS UNITS. 
+    PROBLEM: I could not find a way to change the name of the 1d files of Jy and Hz, so this file is overwritten every time.''' 
+'''
+for i in range(0, len(templogg_list)):
+    print('temperature and log g: %s' % templogg_list[i])
+    new_path_CMFGEN = path_CMFGEN+'NT'+templogg_list[i]
+    print(new_path_CMFGEN)
+    CMFGENfile_into2cols(new_path_CMFGEN, path_results, lower_wave, upper_wave, templogg_list[i])
+'''
 #txt_files = [path_results+'*cont_1d', path_results+'*fin10_1d']
 cont_files = glob.glob(os.path.join(os.path.abspath(path_results),'*cont*Acgs*'))
 fin_files = glob.glob(os.path.join(os.path.abspath(path_results),'*_fin_10*Acgs*'))
-#print cont_files
-#print fin_files
-#results = [fin_files, cont_files]
-#for onedfiles in results:
+
 # Load the text files
 for f in range(0, len(fin_files)):
     A, cgs = numpy.loadtxt(fin_files[f], dtype=numpy.float64, unpack=True)    
@@ -114,7 +127,7 @@ for f in range(0, len(fin_files)):
     wav_cont, flx_cont = selection(A_cont, cgs_cont, lower_wave, upper_wave)
     continuum = numpy.array([wav_cont, flx_cont])
     print('shape of continuum_array', continuum.shape)
-        
+    
     # Rebinning
     lines_rebin, cont_rebin, new_cont_factor, new_lines_factor = spectrum.get_factors_and_rebin(lines, continuum, 250)
     Resolution =  spectrum.resolving_power(Lyalpha, lines)  # R=20,000  for CMFGEN as indicated in Palacios et al. 2010, A&A
