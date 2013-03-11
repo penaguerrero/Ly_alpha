@@ -10,8 +10,6 @@ to create a selection text file that needs to be converted in order for splot to
 
 '''
 
-
-
 # The SEDs and their txt files
 # the full path is: /Users/pena/Documents/AptanaStudio3/Ly_alpha... 
 
@@ -38,10 +36,17 @@ upper_cut = 1300.0
 # Rest wavelength of Ly_alpha from NIST
 Lyalpha = 1215.6701
 
+EQWs = []
+points_used_for_line_continuums = []
+#points_used_for_line_continuums.append('Wavelengths    Fluxes')
+#points_used_for_line_continuums.append('x1  x2    y1  y2')
+AKAs = []
+
 for i in range(0, len(seds)):
     print('Loading %s' % (seds[i]))
     aka='A.K.A. star'+repr(star_counter)
-    print(aka)    
+    print(aka) 
+    AKAs.append(aka)   
     
     ## Printing master aka and real name file
     #print >> a, 'Ostar_'+repr(star_counter), seds[i]
@@ -65,40 +70,91 @@ for i in range(0, len(seds)):
     #    print >> f, data_rebinned[0, i], data_rebinned[1, i]
     #f.close()
     
-    star_counter = star_counter + 1
-
-    '''
     # Ploting 
     # the line to mark Ly_alpha
     lyalpha_arr_wav = []
-    for i in flx:
+    for i in data_rebinned[1]:
         lyalpha_arr_wav.append(Lyalpha)  
     
     # plot limits
-    low = 1200
-    up = 1230
+    low = 1190
+    up = 1300
     # Figure
-    pyplot.figure(1)
-    pyplot.title('Non-rebinned data')
+    pyplot.figure(1, figsize=(10, 10))
+    pyplot.title('Rebinned data')
+    pyplot.suptitle(aka)
     pyplot.xlabel('Wavelength [$\AA$]')
     pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(low, up)
+    pyplot.plot(data_rebinned[0], data_rebinned[1], 'b', lyalpha_arr_wav, data_rebinned[1], 'r--')
+    '''
+    pyplot.figure(2, figsize=(10, 10))
+    pyplot.title('Non-rebinned data')
     pyplot.suptitle(aka)
+    pyplot.xlabel('Wavelength [$\AA$]')
+    pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
+    pyplot.xlim(low, up)
     pyplot.plot(wav, flx, 'b')
     pyplot.plot(lyalpha_arr_wav, flx, 'r--')
+    '''
+    pyplot.show()
 
-    pyplot.figure(2)
-    pyplot.title('Rebinned data')
+    # My continuum function, two-point linear equation: y = m*(x -x1) + y1 
+    print('Enter the lower and upper X-axis to consider in the line:')
+    x1 = float(raw_input("Low limit: "))
+    x2 = float(raw_input("Upper limit: "))
+    temp_x1, _ = spectrum.find_nearest(data_rebinned[0], x1)
+    temp_x2, _ = spectrum.find_nearest(data_rebinned[0], x2)
+    print('closest wavelengths: %f, %f' % (temp_x1, temp_x2))
+    y1 = spectrum.findXinY(data_rebinned[1], data_rebinned[0], temp_x1)
+    y2 = spectrum.findXinY(data_rebinned[1], data_rebinned[0], temp_x2)
+    m = (y2 - y1) / (x2 - x1)
+    y_list = []
+    for x in data_rebinned[0]:
+        y = m * (x - x1) + y1
+        y_list.append(y)
+    my_cont_arr = numpy.array([data_rebinned[0], y_list])
+    
+    coords = [x1, x2, y1, y2]
+    points_used_for_line_continuums.append(coords)    
+    
+    # Normalization to my continuum
+    norm_flx = data_rebinned[1] / my_cont_arr[1]
+    norm_lines = numpy.array([data_rebinned[0], norm_flx])
+    
+    lyalpha_arr_norm = []
+    for i in norm_lines[1]:
+        lyalpha_arr_norm.append(Lyalpha)  
+     
+    # Fitted plots 
+    pyplot.figure(2, figsize=(10, 10))
+    pyplot.title('My continuum fit')
+    pyplot.suptitle(aka)
     pyplot.xlabel('Wavelength [$\AA$]')
     pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
-    pyplot.xlim(low, up)
+    pyplot.xlim(1190, 1300)
+    pyplot.plot(data_rebinned[0], data_rebinned[1], 'b', lyalpha_arr_wav, data_rebinned[1], 'r--', my_cont_arr[0], my_cont_arr[1], 'g')
+
+    pyplot.figure(3, figsize=(10, 10))
+    pyplot.title('My continuum fit')
     pyplot.suptitle(aka)
-    pyplot.plot(data_rebinned[0], data_rebinned[1], 'b')
-    pyplot.plot(lyalpha_arr_wav, flx, 'r--')
+    pyplot.xlabel('Wavelength [$\AA$]')
+    pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
+    pyplot.xlim(1190, 1300)
+    pyplot.plot(norm_lines[0], norm_lines[1], 'b', lyalpha_arr_norm, norm_lines[1], 'r--')
     
-    pyplot.show()
-    '''  
+    # Adding theoretical continuum
+    continuum = spectrum.theo_cont(norm_lines[0], scale_factor=1.0)
+    
+    # EQW measurement
+    eqw = spectrum.EQW_line_fixed(norm_lines, continuum, Lyalpha, 10.0)
+    print('EQW = %f' % eqw) 
+    EQWs.append(eqw)
+    
+    star_counter = star_counter + 1
+
 #a.close()
-   
+for i in range(0, len(EQWs)):
+    print(AKAs[i]+'EQW = %f' % EQWs[i])
     
     
