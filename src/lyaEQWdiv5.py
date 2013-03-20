@@ -6,8 +6,6 @@ import matplotlib
 matplotlib.use("macosx")
 from pprint import pprint
 from random import randrange
-
-os.chdir('/Users/pena/Documents/AptanaStudio3/notclaus/src/')
 from spectrum import pyplot
 from spectrum import spectrum 
 
@@ -41,9 +39,9 @@ IMFs = [#'0.5',
 
 total_chosenfiles = []
 
-colors = ['blue', 'red', 'green', 'magenta', '#994A2B', '#2B494A', '#7E1BE0', '#1BE0D3', '#E0531B', '#94E01B', '#9868C4']
+#colors = ['blue', 'red', 'green', 'magenta', '#994A2B', '#2B494A', '#7E1BE0', '#1BE0D3', '#E0531B', '#94E01B', '#9868C4']
 file_count = 11
-'''
+
 colors = []
 def generate_colors(count):
     ###return value is list containing count number of colors ###
@@ -53,7 +51,7 @@ def generate_colors(count):
     return colors
 
 colors = generate_colors(file_count)
-'''
+
 # This loop only choses the selected IMFs to annalyze the files and create the plots
 for each_folder in S99:
     for j in range (0, len(IMFs)):
@@ -230,8 +228,8 @@ for t in leg1.get_texts():
     t.set_fontsize('small')     
 for t in leg2.get_texts():
     t.set_fontsize('small')     
-#pyplot.show()
-
+pyplot.show()
+'''
 # Saving the plots
 pyplot.figure(1)
 #epsfile = os.path.join(path_results, "Inst_log2.svg")
@@ -249,4 +247,6 @@ pyplot.figure(2)
 epsfile = os.path.join(path_results, "Const_log3.eps")
 pyplot.ion()
 pyplot.savefig(epsfile)
+'''
+
 
