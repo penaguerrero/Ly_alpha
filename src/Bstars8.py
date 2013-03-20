@@ -19,11 +19,11 @@ normBstars = []
 normBstars.append('Theoretical Tlusty B star')
   
 eqws_10 = []
-eqws_10.append('Fixed 10A eqw')
+eqws_10.append('Ly-alpha +- 10A eqw')
 eqws_20 = []
-eqws_20.append('Fixed 20A eqw')
+eqws_20.append('Ly-alpha +- 20A eqw')
 eqws_30 = []
-eqws_30.append('Fixed 30A eqw')
+eqws_30.append('Ly-alpha +- 30A eqw')
 half_eqwstimes2_avoiding_N = []
 half_eqwstimes2_avoiding_N.append('half eqw*2 at 1235')
 
@@ -58,16 +58,16 @@ for i in range(0, len(norm_stars)):
     spec_data = numpy.loadtxt(norm_stars[i], dtype=float, unpack=True)
     continuum_norm = spectrum.theo_cont(spec_data[0], scale_factor=1.0)
     
-    eqw1 = spectrum.EQW_line_fixed(spec_data, continuum_norm, Lyalpha, width=10.0)
+    eqw1 = spectrum.EQW_line_fixed(spec_data, continuum_norm, Lyalpha, width=10.0*2)
     print('*** Ly-alpha EQW fixed at 10 A = %f' % eqw1)
     eqws_10.append(eqw1)
     normBstars.append(os.path.basename(norm_stars[i]))
     
-    eqw2 = spectrum.EQW_line_fixed(spec_data, continuum_norm, Lyalpha, width=20.0)
+    eqw2 = spectrum.EQW_line_fixed(spec_data, continuum_norm, Lyalpha, width=20.0*2)
     print('*** Ly-alpha EQW fixed at 20 A = %f' % eqw2)
     eqws_20.append(eqw2)
     
-    eqw3 = spectrum.EQW_line_fixed(spec_data, continuum_norm, Lyalpha, width=30.0)
+    eqw3 = spectrum.EQW_line_fixed(spec_data, continuum_norm, Lyalpha, width=30.0*2)
     print('*** Ly-alpha EQW fixed at 30 A = %f' % eqw3)
     eqws_30.append(eqw3)
     
