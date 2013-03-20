@@ -82,7 +82,7 @@ for i in range(0, total_files):
     spec_arr = numpy.array([wav, flx])
     cont_arr = numpy.array([wav_cont, flx_cont])    
     print('shape of spec_arr: %s    ----   shape of cont_arr: %s' % (repr(spec_arr.shape), repr(cont_arr.shape)))
-    # Rebinning data to delta_lambda=0.456, which is an average between the typical real observed dlta_lambdas of STIS (0.75) and COS (0.18)
+    # Rebinning data to delta_lambda=0.465, which is an average between the typical real observed dlta_lambdas of STIS (0.75) and COS (0.18)
     desired_delta_lambda = 0.465
     _, initial_rows = cont_arr.shape
     rebin_spec, rebin_cont = spectrum.rebin_arrays_for_desired_resolution(desired_delta_lambda, Lyalpha, spec_arr, cont_arr, initial_rows-1)
