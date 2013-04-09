@@ -83,7 +83,12 @@ differences1_list = []
 differences2_list = []
 rel_error1 = []
 rel_error2 = []
+all_chi_squared1 = []
+all_chi_squared2 = []
 all_eqws = []
+all_aka = []
+weighted_Chis1 = []
+weighted_Chis2 = []
 
 # Generate the lists of the fin and cont files
 fin_files = []
@@ -96,17 +101,27 @@ for i in range(0, len(results_dir)):
         fin_files.append(results_dir[i])
     elif conts in results_dir[i]:
         cont_files.append(results_dir[i])
+        
+aka = 0
+#a = open('ogrid_aka_dictionary.txt', 'w+')
+points_used_for_line_continuums = []
+#points_used_for_line_continuums.append('Wavelengths, fluxes from arr, made-up fluxes')
+#points_used_for_line_continuums.append('x1, x2, y1, y2, ty1, ty2')
 
 # Load the text files
 for f in range(0, len(fin_files)):
+    #fin_files[f]='../results/OstarsCMFGEN/obs_fin_10.fixed_Acgs_30000_logg400.txt'
+    #fin_files[f]='../results/OstarsCMFGEN/obs_fin_10.fixed_Acgs_42500_logg375.txt'
     A, cgs = numpy.loadtxt(fin_files[f], dtype=numpy.float64, unpack=True)    
     print('Loading %s' % fin_files[f])
+    base_fin = os.path.basename(fin_files[f])
     print('Fin file loaded. Now selecting desired range: %f to %f' % (lower_wave, upper_wave))
     # Selecting the range for Ly_alpha
     wav, flx = selection(A, cgs, lower_wave, upper_wave)
     lines = numpy.array([wav, flx])
-    print('shape of lines_array', lines.shape)
-    
+    #print('shape of lines_array', lines.shape)
+    all_aka.append(aka)
+    #print >> a, aka, fin_files[f]
     '''
     ### Text file of Resolving Power of every wavelength
     data_lines = numpy.array([A, cgs])
@@ -125,12 +140,13 @@ for f in range(0, len(fin_files)):
     '''
     
     A_cont, cgs_cont = numpy.loadtxt(cont_files[f], dtype=numpy.float64, unpack=True)   
+    base_cont = os.path.basename(cont_files[f])
     print('Loading %s' % cont_files[f]) 
     print('Continuum file loaded. Now selecting desired range: %f to %f' % (lower_wave, upper_wave))
     # Selecting the range for Ly_alpha
     wav_cont, flx_cont = selection(A_cont, cgs_cont, lower_wave, upper_wave)
     continuum = numpy.array([wav_cont, flx_cont])
-    print('shape of continuum_array', continuum.shape)
+    #print('shape of continuum_array', continuum.shape)
         
     # Rebinning to same length as lines array
     # since the lines array is much larger than the continuum array, this last one must be rebinned:
@@ -142,17 +158,17 @@ for f in range(0, len(fin_files)):
     #norm_cont = spectrum.theo_cont(wav, scale_factor=1.0)
     rebinned_cont, rebinning_factor_cont = spectrum.rebin_one_arr_to_desired_rows(continuum, lines.shape[1])
     lines2, rebinned_cont = spectrum.correct_rebin(lines, rebinned_cont)
-    norm_flx = lines2[1] / rebinned_cont[1]
-    norm_lines = numpy.array([lines2[0], norm_flx])
-    norm_cont = spectrum.theo_cont(lines2[0], scale_factor=1.0)
+    norm_flx_initial_R = lines2[1] / rebinned_cont[1]
+    norm_lines_initial_R = numpy.array([lines2[0], norm_flx_initial_R])
+    norm_cont_initial_R = spectrum.theo_cont(lines2[0], scale_factor=1.0)
 
     # Measuring EQW
     # from original shape
-    eqw_initial = spectrum.EQW_line_fixed(norm_lines, norm_cont, Lyalpha, 10.0)
-    print ('Initial eqw with the EQW "fixed" function = %f' % (eqw_initial))
+    eqw_initial = spectrum.EQW_line_fixed(norm_lines_initial_R, norm_cont_initial_R, Lyalpha, 10.0)
+    print ('*** Initial eqw with the EQW "fixed" function = %f' % (eqw_initial))
     
     # Determining Resolving Powers 
-    initial_Resolution =  spectrum.resolving_power(Lyalpha, lines)  # R=20,000  for CMFGEN as indicated in Palacios et al. 2010, A&A
+    initial_Resolution =  spectrum.resolving_power(Lyalpha, lines2)  # R=20,000  for CMFGEN as indicated in Palacios et al. 2010, A&A
     original_delta_lambda = Lyalpha / float(initial_Resolution)
     print('Initial Resolving Power = %i  ---  Initial delta_lambda = %f' % (initial_Resolution, original_delta_lambda))
 
@@ -160,12 +176,12 @@ for f in range(0, len(fin_files)):
     '''delta_lambda=0.456 is an average between the typical real observed dlta_lambdas of STIS (0.75) and COS (0.18)'''
     desired_delta_lambda = 0.465
     lines_rebinned, cont_rebinned = spectrum.rebin_arrays_for_desired_resolution(desired_delta_lambda, Lyalpha, lines, continuum, guessed_rows=500)
-    print('shape of lines_rebinned: %s    ----   shape of cont_rebinned: %s' % (repr(lines_rebinned.shape), repr(cont_rebinned.shape)))
+    #print('shape of lines_rebinned: %s    ----   shape of cont_rebinned: %s' % (repr(lines_rebinned.shape), repr(cont_rebinned.shape)))
 
     # Measuring EQW
     # from rebinned shape
     new_eqw = spectrum.EQW_line_fixed(lines_rebinned, cont_rebinned, Lyalpha, 10.0)
-    print ('Rebinned array eqw_fixed = %f' % (new_eqw))
+    print ('*** Rebinned array eqw_fixed = %f' % (new_eqw))
     all_eqws.append(new_eqw)
     
     # Normalization
@@ -173,8 +189,9 @@ for f in range(0, len(fin_files)):
     norm_flx = fixed_lines_rebinned[1,:] / fixed_cont_rebinned[1,:]
     
     # Arrays for eqw measurements
-    norm_lines = numpy.array([lines_rebinned[0,:], norm_flx])
-    cont_lines = spectrum.theo_cont(lines_rebinned[0,:], scale_factor=1.0)
+    norm_lines = numpy.array([fixed_lines_rebinned[0,:], norm_flx])
+    cont_lines = spectrum.theo_cont(fixed_lines_rebinned[0,:], scale_factor=1.0)
+    #print('******* norm_lines.shape', norm_lines.shape)
 
     # Ploting 
     # the line to mark Ly_alpha in rebinned spectra
@@ -198,33 +215,31 @@ for f in range(0, len(fin_files)):
     up = 1230
     # Figure
     pyplot.figure(1, figsize=(10, 10))
-    pyplot.title('Lines (blue) and Continuum (green)')
-    pyplot.suptitle(fin_files[f])
+    pyplot.title('AKA Ostar_'+repr(aka))
+    pyplot.suptitle('Lines (blue): '+base_fin)
     pyplot.xlabel('Wavelength [$\AA$]')
     pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(1190, 1300)
     #pyplot.ylim(0, 3e-8)
     pyplot.plot(lines_rebinned[0], lines_rebinned[1], 'b', lyalpha_arr_reb, lines_rebinned[1], 'r--')#, cont_rebinned[0], cont_rebinned[1], 'g')
-    
-    '''
+    pyplot.show()
+    '''  
     pyplot.figure(3, figsize=(10, 10))
-    pyplot.title('Normalization')
-    pyplot.suptitle(fin_files[f])
+    pyplot.title('AKA Ostar_'+repr(aka))
+    pyplot.suptitle('Normalization: '+fin_files[f]+' / '+cont_files[f])
     pyplot.xlim(low, up)
     #pyplot.ylim(0.4, 1.5)
     pyplot.plot(lines_rebinned[0], norm_flx, 'b', lyalpha_arr_wav_rebinned, norm_flx, 'r--')
     #pyplot.fill_between(eqw, eqw_y, 0,color='g')
-
+    '''
     pyplot.figure(2, figsize=(10, 10))
-    pyplot.title('Lines (blue) and Continuum (green)')
-    pyplot.suptitle(fin_files[f])
+    pyplot.title('AKA Ostar_'+repr(aka))
+    pyplot.suptitle('blue: '+base_fin+'  green: '+base_cont)
     pyplot.xlabel('Wavelength [$\AA$]')
     pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(1190, 1300)
     #pyplot.ylim(0, 3e-8)
     pyplot.plot(wav, flx, 'b', lyalpha_arr_wav, flx, 'r--', wav_cont, flx_cont, 'g')
-    '''
-    pyplot.show()
     
     # My continuum function, two-point linear equation: y = m*(x -x1) + y1 
     print('Enter the lower and upper X-axis to consider in the line:')
@@ -254,13 +269,10 @@ for f in range(0, len(fin_files)):
         ty = tm * (x - tx1) + ty1
         ty_list.append(ty)
     tmy_cont_arr = numpy.array([lines_rebinned[0], ty_list])
-        
-    # Normalization to my continuum
-    new_norm_flx = lines_rebinned[1] / my_cont_arr[1]
-    
-    pyplot.figure(1, figsize=(10, 10))
-    pyplot.title('My continuum fit')
-    pyplot.suptitle(fin_files[f])
+            
+    pyplot.figure(3, figsize=(10, 10))
+    pyplot.title('AKA Ostar_'+repr(aka))
+    pyplot.suptitle('My continuum fit to: '+base_fin+' and: '+base_cont)
     pyplot.xlabel('Wavelength [$\AA$]')
     pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(1190, 1300)
@@ -269,57 +281,117 @@ for f in range(0, len(fin_files)):
                 cont_rebinned[0], cont_rebinned[1], 'g', lines_rebinned[0], y_list, 'magenta',
                 lines_rebinned[0], ty_list, 'cyan')
 
-    # Normalization to my continuum
-    tnew_norm_flx = lines_rebinned[1] / tmy_cont_arr[1]
+    # Normalization to my continuum: line from array
+    new_norm_flx = lines_rebinned[1] / my_cont_arr[1]
+    new_norm_lines = numpy.array([lines_rebinned[0], new_norm_flx])
     
-    # Relative Error
-    for i in range(0, len(new_norm_flx)):
-        absolute_error1 = abs(new_norm_flx[i] - norm_flx[i])
-        relative_error1 = (absolute_error1) / norm_flx[i] * 100
-        differences1_list.append(absolute_error1)
-        rel_error1.append(relative_error1)
-    for i in range(0, len(tnew_norm_flx)):        
-        absolute_error2 = abs(tnew_norm_flx[i] - norm_flx[i])
-        relative_error2 = (absolute_error2) / norm_flx[i] * 100
-        differences2_list.append(absolute_error2)
-        rel_error2.append(relative_error2)
-    diff_with_mynorm_avg = (sum(differences1_list)/len(differences1_list))**0.5
-    tdiff_with_mynorm_avg = (sum(differences2_list)/len(differences2_list))**0.5
-    rel_error_avg1 = (sum(rel_error1)/len(rel_error1))**0.5
-    rel_error_avg2 = (sum(rel_error2)/len(rel_error2))**0.5
+    # Normalization to my continuum: made-up line
+    tnew_norm_flx = lines_rebinned[1] / tmy_cont_arr[1]
+    tnew_norm_lines = numpy.array([lines_rebinned[0], tnew_norm_flx])
+    
+    N1 = len(my_cont_arr[0,:])
+    abs_err_sqrd = []
+    chi2 = []
+    # Absolute and Relative Error. Chi squared
+    for i in range(0, N1):
+        norm_absolute_error = numpy.fabs(new_norm_flx[i] - norm_flx[i])
+        absolute_error_to_continuum = numpy.fabs(my_cont_arr[1,i] - cont_rebinned[1,i])
+        relative_error = (absolute_error_to_continuum) / cont_rebinned[1,i] * 100
+        differences1_list.append(absolute_error_to_continuum)
+        rel_error1.append(relative_error)
+        abs_err_sqrd.append(absolute_error_to_continuum**2)        
+    mean = []
+    i = 0
+    for j in range(1, N1):
+        mean_temp = (y_list[j] + y_list[i]) / 2
+        error = (mean_temp)**0.5    # this is the sigma
+        mean.append(mean_temp)
+        i = i + 1
+    print('mean' , mean)    
+    variance = []
+    for i in range(0, len(mean)):
+        v = ((my_cont_arr[1,i] - mean[i])**2) / float(N1)
+        variance.append(v)
+    for i in range(0, len(variance)):
+        chi2_indiv = abs_err_sqrd[i] / variance[i]
+        chi2.append(chi2_indiv)
+    chi_squared = sum(chi2)
+
+    N2 = len(my_cont_arr[0,:])
+    tabs_err_sqrd = []
+    tchi2 = []
+    # Absolute and Relative Error. Chi squared
+    for i in range(0, N2):
+        tnorm_absolute_error = numpy.fabs(tnew_norm_flx[i] - norm_flx[i])
+        absolute_error_to_continuum = numpy.fabs(tmy_cont_arr[1,i] - cont_rebinned[1,i])
+        relative_error = (absolute_error_to_continuum) / cont_rebinned[1,i] * 100
+        differences2_list.append(absolute_error_to_continuum)
+        rel_error2.append(relative_error)
+        tabs_err_sqrd.append(absolute_error_to_continuum**2)        
+    tmean = []
+    i = 0
+    for j in range(1, N2):
+        mean_temp = (ty_list[j] + ty_list[i]) / 2
+        error = (mean_temp)**0.5    # this is the sigma
+        tmean.append(mean_temp)
+        i = i + 1
+    print('tmean' , tmean)    
+    tvariance = []
+    for i in range(0, len(tmean)):
+        tv = ((tmy_cont_arr[1,i] - tmean[i])**2) / float(N2)
+        tvariance.append(tv)
+    for i in range(0, len(tvariance)):
+        chi2_indiv = tabs_err_sqrd[i] / tvariance[i]
+        tchi2.append(chi2_indiv)
+    tchi_squared = sum(tchi2)
+ 
+    diff_with_mynorm_avg = (sum(differences1_list)/float(len(differences1_list)))**0.5
+    tdiff_with_mynorm_avg = (sum(differences2_list)/float(len(differences2_list)))**0.5
+    rel_error_avg1 = (sum(rel_error1)/float(len(rel_error1)))**0.5
+    rel_error_avg2 = (sum(rel_error2)/float(len(rel_error2)))**0.5
+    chi_sqd1 = sum(abs_err_sqrd) / float(N1)
+    chi_sqd2 = sum(tabs_err_sqrd) / float(N2)
+    all_chi_squared1.append(chi_sqd1)
+    all_chi_squared2.append(chi_sqd2)
+             
     print('Average Absolute error of my normalization to the real one: %f' % (diff_with_mynorm_avg))
     print('Average Absolute error of the other normalization to the real one: %f' % (tdiff_with_mynorm_avg))
-    print('Average Relative error of my normalization to the real one: %f' % (rel_error_avg1))
-    print('Average Relative error of the other normalization to the real one: %f' % (rel_error_avg2))
-    # Chi squared
-    chi_squared1 = []
-    chi_squared2 = []
-    for re1 in rel_error1:
-        temp_chi_squared1 = re1*re1
-        chi_squared1.append(temp_chi_squared1)
-    Avg_chi_squared1 = sum(chi_squared1)/len(chi_squared1)
-    for re2 in rel_error2:
-        temp_chi_squared2 = re2*re2
-        chi_squared2.append(temp_chi_squared2)
-    Avg_chi_squared2 = sum(chi_squared2)/len(chi_squared2)
-    print('Average Chi squared of my fit = %f' % Avg_chi_squared1)
-    print('Average Chi squared of my fitwith made up line = %f' % Avg_chi_squared2)
-
-    pyplot.figure(2, figsize=(10, 10))
-    pyplot.title('Normalization')
-    pyplot.suptitle(fin_files[f])
+    print('Average Relative error of my line to the continuum: %f' % (rel_error_avg1))
+    print('Average Relative error of made-up line to the continuum: %f' % (rel_error_avg2))
+    print('Chi-squared of my fit = %f' % chi_sqd1)
+    print('Chi-squared of my fit with made up line = %f' % chi_sqd2)
+    print('other try Chi-squared of my fit = %s' % repr(chi_squared))
+    print('other try Chi-squared of my fit with made up line = %s' % repr(tchi_squared))
+    
+    coords = [x1, x2, y1, y2, ty1, ty2]
+    points_used_for_line_continuums.append(coords)
+     
+    pyplot.figure(4, figsize=(10, 10))
+    pyplot.title('AKA Ostar_'+repr(aka))
+    pyplot.suptitle('Normalization: '+base_fin+' / '+base_cont)
     pyplot.xlim(low, up)
     #pyplot.ylim(0.4, 1.5)
-    pyplot.plot(lines_rebinned[0], norm_flx, 'b', lyalpha_arr_wav_rebinned, norm_flx, 'r--',
-                my_cont_arr[0], new_norm_flx, 'magenta', tmy_cont_arr[0], tnew_norm_flx, 'c--')
+    pyplot.plot(norm_lines[0], norm_lines[1], 'b', lyalpha_arr_wav_rebinned, norm_lines[1], 'r--',
+                new_norm_lines[0], new_norm_lines[1], 'magenta', tnew_norm_lines[0], tnew_norm_lines[1], 'c--')
     #pyplot.fill_between(eqw, eqw_y, 0,color='g')
 
     pyplot.show()
-
+    
+    aka = aka+1
+#a.close()    
 print('Absolute error between the lines as continuum --- Relative error between lines and continuum  --- EQWs')
 print('Line from flux array, Made up line  ---  Line from flux array, Made up line  --->  EQW[A]')
 print(differences1_list, differences2_list, rel_error1, rel_error2, all_eqws)
+print('X^2 of my fit ' % all_chi_squared1)
+print('X^2 of my fit with made up line ' % all_chi_squared2)
+print('Weighted Chi^2 of my fit ' % weighted_Chis1)
+print('Weighted Chi^2 of my fit with made up line ' % weighted_Chis2)
 
-
+# EQW file with coords and fits
+f = open('CMFGEN_continuum_tests.txt', 'w+')
+print >> f, 'AKA, Absolute error between the lines as continuum --- Relative error between lines and continuum  --- EQWs'
+print >> f, 'Ostar - Line from flux array, Made up line - Line from flux array, Made up line - EQW[A] - Chi^2 of my fit - Chi^2 made-up line - Coordinates (x1, x2, y1, y2, ty1, ty2)'
+print >> f, all_aka, differences1_list, differences2_list, rel_error1, rel_error2, all_eqws, all_chi_squared1, all_chi_squared2, points_used_for_line_continuums
+f.close()
 
 
