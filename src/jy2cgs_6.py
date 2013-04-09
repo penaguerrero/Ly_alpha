@@ -3,6 +3,7 @@ import glob
 import re
 import os
 import string
+import table
 from spectrum import spectrum
 from spectrum import pyplot
 from claus.clausfile import clausfile
@@ -92,6 +93,8 @@ avg_relative_err_to_real_continuum_all2 = []
 all_chi_squared1 = []
 all_chi_squared2 = []
 
+temps = []
+loggs = []
 
 # Generate the lists of the fin and cont files
 fin_files = []
@@ -112,7 +115,7 @@ points_used_for_line_continuums = []
 # Load the text files
 for f in range(0, len(fin_files)):
     A, cgs = numpy.loadtxt(fin_files[f], dtype=numpy.float64, unpack=True)    
-    print('Loading %s' % fin_files[f])
+    #print('Loading %s' % fin_files[f])
     base_fin = os.path.basename(fin_files[f])
     print('Fin file loaded. Now selecting desired range: %f to %f' % (lower_wave, upper_wave))
     # Selecting the range for Ly_alpha
@@ -140,7 +143,7 @@ for f in range(0, len(fin_files)):
     
     A_cont, cgs_cont = numpy.loadtxt(cont_files[f], dtype=numpy.float64, unpack=True)   
     base_cont = os.path.basename(cont_files[f])
-    print('Loading %s' % cont_files[f]) 
+    #print('Loading %s' % cont_files[f]) 
     print('Continuum file loaded. Now selecting desired range: %f to %f' % (lower_wave, upper_wave))
     # Selecting the range for Ly_alpha
     wav_cont, flx_cont = selection(A_cont, cgs_cont, lower_wave, upper_wave)
@@ -164,12 +167,12 @@ for f in range(0, len(fin_files)):
     # Measuring EQW
     # from original shape
     eqw_initial = spectrum.EQW_line_fixed(norm_lines_initial_R, norm_cont_initial_R, Lyalpha, 10.0)
-    print ('*** Initial eqw with the EQW "fixed" function = %f' % (eqw_initial))
+    #print ('*** Initial eqw with the EQW "fixed" function = %f' % (eqw_initial))
     
     # Determining Resolving Powers 
     initial_Resolution =  spectrum.resolving_power(Lyalpha, lines2)  # R=20,000  for CMFGEN as indicated in Palacios et al. 2010, A&A
     original_delta_lambda = Lyalpha / float(initial_Resolution)
-    print('Initial Resolving Power = %i  ---  Initial delta_lambda = %f' % (initial_Resolution, original_delta_lambda))
+    #print('Initial Resolving Power = %i  ---  Initial delta_lambda = %f' % (initial_Resolution, original_delta_lambda))
 
     # Now rebinning according to a desired delta_lambda
     '''delta_lambda=0.456 is an average between the typical real observed dlta_lambdas of STIS (0.75) and COS (0.18)'''
@@ -241,16 +244,21 @@ for f in range(0, len(fin_files)):
     pyplot.plot(A, cgs, 'b', lyalpha_arr_wav, flx, 'r--', wav_cont, flx_cont, 'g')
     '''
     # My continuum function, two-point linear equation: y = m*(x -x1) + y1 
-    print('Enter the lower and upper X-axis to consider in the line:')
+    #print('Enter the lower and upper X-axis to consider in the line:')
     x1 = 1274.63 #float(raw_input("Low limit: "))
     x2 = 1290.42 #float(raw_input("Upper limit: "))
     temp_x1, _ = spectrum.find_nearest(lines_rebinned[0], x1)
     temp_x2, _ = spectrum.find_nearest(lines_rebinned[0], x2)
-    print('closest wavelengths: %f, %f' % (temp_x1, temp_x2))
+    #print('closest wavelengths: %f, %f' % (temp_x1, temp_x2))
     y1 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x1)
     y2 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x2)
     temp_obj = string.split(base_fin, sep='_')
-    print (temp_obj[4])
+    temps.append(int(temp_obj[4]))
+    logg_obj_temporary1 = string.split(temp_obj[5], sep='.')
+    logg_obj_temporary2 = logg_obj_temporary1[0].replace("logg", "") 
+    logg_obj = float(logg_obj_temporary2) * 0.01
+    loggs.append(logg_obj)
+    print ('Teff = %i  logg = %f' % (int(temp_obj[4]), logg_obj))
     if (numpy.fabs(y2) > numpy.fabs(y1)) or (float(temp_obj[4]) > 35000.0) and (float(temp_obj[4]) < 48000.0):
         x1 = 1221.76
         x2 = 1298.58
@@ -274,7 +282,7 @@ for f in range(0, len(fin_files)):
     my_cont_arr = numpy.array([lines_rebinned[0], y_list])
     
     # My continuum without the flux array: : y = m*(x -x1) + y1 
-    print('Enter the lower and upper X-axis to consider in the line:')
+    #print('Enter the lower and upper X-axis to consider in the line:')
     tx1 = x1#float(raw_input("x1 pont: "))
     ty1 = y1+(y1/100.0)#float(raw_input("y1 pont: "))
     tx2 = x2#float(raw_input("x2 pont: "))
@@ -349,10 +357,11 @@ for f in range(0, len(fin_files)):
     trelative_err_to_real_continuum_list = []
     tabs_err_to_real_continuum_list = []
     for i in range(0, len(tmy_cont_arr[0])):
-        trelative_err_to_real_continuum = ((tmy_cont_arr[1,i] / cont_rebinned[1,i]) - 1.0) * 100
-        trelative_err_to_real_continuum_list.append(trelative_err_to_real_continuum)
-        tabs_err_to_real_continuum = tmy_cont_arr[1,i] - cont_rebinned[1,i]
+        tabs_err_to_real_continuum = numpy.fabs(tmy_cont_arr[1,i]) - numpy.fabs(cont_rebinned[1,i])
         tabs_err_to_real_continuum_list.append(tabs_err_to_real_continuum)
+        #trelative_err_to_real_continuum = ((numpy.fabs(tmy_cont_arr[1,i] / cont_rebinned[1,i])) - 1.0) * 100
+        trelative_err_to_real_continuum = (tabs_err_to_real_continuum / numpy.fabs(cont_rebinned[1,i])) * 100
+        trelative_err_to_real_continuum_list.append(trelative_err_to_real_continuum)
         
     tavg_relative_err_to_real_continuum = sum(trelative_err_to_real_continuum_list) / len(trelative_err_to_real_continuum_list)
     tavg_abs_err_to_real_continuum = sum(tabs_err_to_real_continuum_list) / len(tabs_err_to_real_continuum_list)
@@ -362,10 +371,10 @@ for f in range(0, len(fin_files)):
     avg_abs_err_to_real_continuum_all2.append(tavg_abs_err_to_real_continuum)
     avg_relative_err_to_real_continuum_all2.append(tavg_relative_err_to_real_continuum)
     
-    print('Average Absolute error of my normalization to the real one: %f' % (avg_abs_err_to_real_continuum))
-    print('Average Absolute error of the other normalization to the real one: %f' % (tavg_abs_err_to_real_continuum))
+    #print('Average Absolute error of my normalization to the real one: %f' % (avg_abs_err_to_real_continuum))
+    #print('Average Absolute error of the other normalization to the real one: %f' % (tavg_abs_err_to_real_continuum))
     print('Average Relative error of my line to the continuum: %f' % (avg_relative_err_to_real_continuum))
-    print('Average Relative error of made-up line to the continuum: %f' % (tavg_relative_err_to_real_continuum))
+    #print('Average Relative error of made-up line to the continuum: %f' % (tavg_relative_err_to_real_continuum))
     print('Chi-squared of my fit = %f' % chi_squared)
     all_chi_squared1.append(chi_squared)
     print('Chi-squared of my fit with made up line = %f' % tchi_squared)
@@ -374,7 +383,6 @@ for f in range(0, len(fin_files)):
     coords = [x1, x2, y1, y2, ty1, ty2]
     points_used_for_line_continuums.append(coords)
     
-    ''' 
     pyplot.figure(4, figsize=(10, 10))
     pyplot.title('AKA Ostar_'+repr(aka))
     pyplot.suptitle('Normalization: '+base_fin+' / '+base_cont)
@@ -384,7 +392,6 @@ for f in range(0, len(fin_files)):
                 new_norm_lines[0], new_norm_lines[1], 'magenta', tnew_norm_lines[0], tnew_norm_lines[1], 'c--')
     #pyplot.fill_between(eqw, eqw_y, 0,color='g')
     pyplot.show()
-    '''
     
     cont_eqw_from_line = spectrum.theo_cont(new_norm_lines[0])
     eqw_from_line = spectrum.EQW_line_fixed(new_norm_lines, cont_eqw_from_line, Lyalpha, 10.0)
@@ -405,9 +412,20 @@ print('Done!')
 #print numpy.shape(all_eqws), numpy.shape(eqw_from_line_all), numpy.shape(eqw_from_madeup_line_all), 
 #print numpy.shape(all_chi_squared1), numpy.shape(all_chi_squared2), numpy.shape(points_used_for_line_continuums)
 
-
+'''
 # EQW file with my two fitted lines
-f = open('CMFGEN_continuum_tests.txt', 'w+')
+f = open('CMFGEN_continuum_tests2.txt', 'w+')
+table_chi = []
+table_chi.append(['Alias', 'avg_abs_err_to_real_continuum', 'avg_relative_err_to_real_continuum_all', 'real_eqws', 'eqw_from_line', 'all_chi_squared'])
+for i in range(0, len(all_aka)):
+    t = [repr(all_aka[i]), repr(avg_abs_err_to_real_continuum_all[i]), repr(avg_relative_err_to_real_continuum_all[i]),
+         repr(all_eqws[i]), repr(eqw_from_line_all[i]), repr(all_chi_squared1[i])]
+    table_chi.append(t)
+table.pprint_table(f, table_chi)
+f.close()
+'''
+
+'''
 print >> f, 'AKA, Absolute error between the lines as continuum --- Relative error between lines and continuum  --- EQWs: real, from line, from made-up line'
 print >> f, 'Ostar_# - Line from flux array, Made up line - Line from flux array, Made up line - EQW[A]: real, from line, from made-up line - Chi^2 of my fit - Chi^2 made-up line'  
 for i in range(0, len(all_aka)):
@@ -422,7 +440,24 @@ for i in range(0, len(all_aka)):
     points_used_for_line_continuums[i][4],
     points_used_for_line_continuums[i][5]
 f.close()
+'''
 
+'''
+# EQW file with my two fitted lines
+table_data = []
+cols_hdr = ["Temperature", "log g", "eqw_pm_5"]
+table_data.append(cols_hdr)
+for i in range(0, len(temps)):
+    temporary_var = [repr(temps[i]), repr(loggs[i]), repr(all_eqws[i])]
+    table_data.append(temporary_var)
+f = open('../results/CMFGEN_eqwpm5.txt', 'w+')
+print >> f, 'SIGN CONVENTION:   positive = emission   negative = absorption'
+table.pprint_table(f, table_data)
+f.close()
+'''
+
+
+'''
 # File with coords per object:
 f = open('Ostar_coords.txt', 'w+')
 print >> f, 'Ostar_#, Wavelengths, fluxes from arr, made-up fluxes'
@@ -430,4 +465,4 @@ print >> f, '          x1,   x2,      y1,   y2,        ty1,   ty2'
 for i in range(0, len(all_aka)):
     print >> f, all_aka[i], points_used_for_line_continuums[i]
 f.close()
-
+'''
