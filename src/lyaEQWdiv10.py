@@ -155,7 +155,7 @@ lower = 6.3
 upper = 8
 font = {#'family' : 'Vera Sans',
         'weight' : 'regular',
-        'size'   : 15}
+        'size'   : 16}
 # OR ONE CAN USE FOR INDIVIDUAL AXIS:
 #f1.tick_params(axis='x', labelsize=17)
 #f1.tick_params(axis='y', labelsize=17)
@@ -175,12 +175,12 @@ f1.set_title('Instantaneous SFR')
 f1.set_xlim(lower, upper)
 f1.set_ylim(-60, 250)
 f1.text(6.5, -30, 'stellar component')   
-f1.text(6.33, 90, 'total=')   
-f1.text(6.33, 70, 'nebular')   
-f1.text(6.4, 55, '+')  
-f1.text(6.36, 40, 'stellar')
+f1.text(6.33, 75, 'total=')   
+f1.text(6.33, 55, 'nebular')   
+f1.text(6.4, 40, '+')  
+f1.text(6.36, 25, 'stellar')
 f1.text(7.2, 10, 'nebular component')  
-f1.text(7.6, 205 , 'IMF exp')
+f1.text(7.58, 205 , 'IMF exp')
 # adding the enhancement of the stellar component  
 f2 = figs.add_subplot(212)
 #f2.set_xlim(lower, upper) 
@@ -200,9 +200,9 @@ figs.text(0.035, 0.5, 'Ly-alpha EW [$\AA$]', ha='center', va='center', rotation=
 f3.set_xlim(lower, upper)
 #f3.set_ylim(-15, 170)
 f3.text(6.6, 6, 'stellar component')   
-f3.text(7.3, 60, 'total = nebular + stellar')   
+f3.text(7.15, 60, 'total = nebular + stellar')   
 f3.text(6.8, 200, 'nebular component')   
-f3.text(7.65, 270, 'IMF exp')  
+f3.text(7.62, 275, 'IMF exp')  
 # adding the enhancement of the stellar component  
 f4 = figs.add_subplot(212)#, sharex=f3)
 #f4.set_xlim(lower, upper) 
@@ -240,7 +240,7 @@ for i in range(0, len(constant_tot)):
     curve.set_linestyle('--')
 
 leg1 = pyplot.figure(1).legend(curves_inst, IMFs, bbox_to_anchor=(0.85, 0.85))  
-leg2 = pyplot.figure(2).legend(curves_cont, IMFs, bbox_to_anchor=(0.87, 0.87), labelspacing=0.2)
+leg2 = pyplot.figure(2).legend(curves_cont, IMFs, bbox_to_anchor=(0.87, 0.88), labelspacing=0.2)
 for t in leg1.get_texts():
     t.set_fontsize(12)     
 for t in leg2.get_texts():
