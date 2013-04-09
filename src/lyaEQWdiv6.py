@@ -3,8 +3,10 @@ import numpy
 import matplotlib
 import string
 import os
+import table
 matplotlib.use("macosx")
-from spectrum import pyplot
+from matplotlib import pyplot
+from random import randrange
 
 
 '''
@@ -43,6 +45,7 @@ total_chosenfiles = []
 
 colors = ['blue', 'red', 'green', 'magenta', '#994A2B', '#2B494A', '#7E1BE0', '#1BE0D3', '#E0531B', '#94E01B', '#9868C4']
 file_count = 11
+
 '''
 colors = []
 def generate_colors(count):
@@ -72,6 +75,10 @@ for text_file in files_in_results:
 files2plot = len(tot_lyas_files)
 print('Total files to obtain information for the plot: %i' % files2plot)
 
+# lists to make the EQWs table
+table_fixed = []
+table_const = []
+table_yrs = []
 # This loop actually makes the plots
 i = 1
 for txt_file in tot_lyas_files:
@@ -87,17 +94,57 @@ for txt_file in tot_lyas_files:
     tot_age_and_eqw = [data[4], data[5]]
     word = 'fixed'
     if word in txt_file:
+        # Since time is the same for both files
+        for t in data[0]:
+            mill_yrs = t / 1e6
+            table_yrs.append(t)
         fixed_ste.append(pair_ste)
         fixed_neb.append(pair_neb)
         fixed_tot.append(tot_age_and_eqw)
+        t = zip(data[1], data[3], data[5])
+        table_fixed.append(t)
     else:
         constant_ste.append(pair_ste)
         constant_neb.append(pair_neb)
         constant_tot.append(tot_age_and_eqw)
+        t = zip(data[1], data[3], data[5])
+        table_const.append(t)
     i = i + 1
-            
-#print(fixed_ste, fixed_neb, fixed_tot)
+    
+# The pretty table of the data
+table_out = []
+table_out.append(['time [10^6 yr]', 'log time', '','Instantaneous SFR', '', '', 'Constant SFR', ''])
+table_out.append(['', '','stellar EQW', 'nebular EQW', 'total=nebular+stellar', 'stellar EQW', 'nebular EQW', 'total=nebular+stellar'])
+table_ste_eqwf = []
+table_neb_eqwf = []
+table_tot_eqwf = []
+table_ste_eqwc = []
+table_neb_eqwc = []
+table_tot_eqwc = []
+for j in range(0, len(IMFs)):
+    tf1, tf2, tf3 = zip(*table_fixed[j])
+    tc1, tc2, tc3 = zip(*table_const[j])
+    for i in range(0, len(tc1)):
+        table_ste_eqwf.append(tf1[i])
+        table_neb_eqwf.append(tf2[i])
+        table_tot_eqwf.append(tf3[i])
+        table_ste_eqwc.append(tc1[i])
+        table_neb_eqwc.append(tc2[i])
+        table_tot_eqwc.append(tc3[i])
 
+print(len(table_yrs), len(table_ste_eqwf), len(table_neb_eqwf), len(table_tot_eqwf), len(table_ste_eqwc), len(table_neb_eqwc), len(table_tot_eqwc))
+for i in range (0, len(table_yrs)):
+    t = [repr(table_yrs[i]), repr(table_ste_eqwf[i]), repr(table_neb_eqwf[i]), repr(table_tot_eqwf[i]),
+         repr(table_ste_eqwc[i]), repr(table_neb_eqwc[i]), repr(table_tot_eqwc[i])]
+    table_out.append(t)
+#print(table_out)
+f = open('../results/SB99eqws.txt', 'w+')
+#table.pprint_table(f, table_out)
+for i in range (0, len(table_yrs)):
+    print >> f, table_out[i]
+f.close()
+
+            
 lower = 6.3
 upper = 8
 pyplot.figure(1, figsize=(10, 9))
@@ -112,7 +159,7 @@ pyplot.text(6.36, 91, 'nebular')
 pyplot.text(6.41, 85, '+')  
 pyplot.text(6.36, 78, 'stellar')
 pyplot.text(6.6, 100, 'nebular component')  
-pyplot.text(7.67, 209 , 'IMF exp')  
+pyplot.text(7.7, 209 , 'IMF exp')  
  
 pyplot.figure(2, figsize=(10,9))
 pyplot.title('Constant SFR') 
@@ -152,6 +199,7 @@ for t in leg2.get_texts():
     t.set_fontsize(10)     
 pyplot.show()
 
+'''
 # Saving the plots
 pyplot.figure(1)
 epsfile = os.path.join(path_results, "Inst_log4.eps")
@@ -161,6 +209,6 @@ pyplot.figure(2)
 epsfile = os.path.join(path_results, "Const_log4.eps")
 pyplot.ion()
 pyplot.savefig(epsfile)
-
+'''
 
 
