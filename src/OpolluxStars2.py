@@ -3,8 +3,10 @@ import glob
 import os
 import string
 import table
-from spectrum import pyplot
+from matplotlib import pyplot
+from pylab import *
 from spectrum import spectrum
+from matplotlib.ticker import MaxNLocator
 
 
 '''
@@ -39,16 +41,25 @@ seds = glob.glob('../pollux/*.sed')
 #txts = glob.glob('../pollux/*.sed.txt')
 
 path_results = '../results/OpolluxStars/'
+path_plots = '../results/plots/'
 
 star_counter = 0
-lower_cut = 1190.0
+lower_cut = 1100.0
 upper_cut = 1300.0
 
 #a = open(path_results+'aka_dictionary.txt', 'w+')
 #print >> a, 'AKA', 'Real name'
 
 # Rest wavelength of Ly_alpha from NIST
-Lyalpha = 1215.6701
+Lyalpha = 1215.3 #1215.6701
+# rest wavelengths from Leitherer et al(2011), ApJ, 141, 37
+# the numbers are different because they look prettier in the plot
+cIII_mie = 1172.0 #1175.53
+siIII = 1202.3 #1206.50
+nV = 1242.80
+cIII = 1247.38
+sII = 1250.58
+
 
 EQWs = []
 points_used_for_line_continuums = []
@@ -161,12 +172,34 @@ for i in range(0, len(seds)):
     # Normalization to my continuum
     norm_flx = data_rebinned[1] / my_cont_arr[1]
     norm_lines = numpy.array([data_rebinned[0], norm_flx])
-    
     '''
     lyalpha_arr_norm = []
     for i in norm_lines[1]:
         lyalpha_arr_norm.append(Lyalpha)  
-     
+    '''
+    lya, _ = spectrum.find_nearest(norm_lines[0], Lyalpha)
+    flx_lya = spectrum.findXinY(norm_flx, norm_lines[0], lya)
+    if flx_lya > 1.0:
+        y_Lyalpha = [flx_lya+0.1, flx_lya+0.3]
+    else:
+        y_Lyalpha = [1.2, 1.5]
+    lyalpha_arr_norm = []
+    cIII_mie_list = []
+    siIII_list = []
+    nV_list =[]
+    cIII_list = []
+    sII_list = []
+    N = len(y_Lyalpha)
+    for i in range(0, N):
+        lyalpha_arr_norm.append(Lyalpha)
+        cIII_mie_list.append(cIII_mie)
+        siIII_list.append(siIII)
+        nV_list.append(nV)
+        cIII_list.append(cIII)
+        sII_list.append(sII)
+    lyalpha_arr = numpy.array([lyalpha_arr_norm, y_Lyalpha])
+    
+    ''' 
     # Fitted plots 
     pyplot.figure(2, figsize=(10, 10))
     pyplot.title('My continuum fit')
@@ -175,17 +208,47 @@ for i in range(0, len(seds)):
     pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(1190, 1300)
     pyplot.plot(data_rebinned[0], data_rebinned[1], 'b', lyalpha_arr_wav, data_rebinned[1], 'r--', my_cont_arr[0], my_cont_arr[1], 'g')
-
-    pyplot.figure(3, figsize=(10, 10))
-    pyplot.title('My continuum fit')
-    pyplot.suptitle(aka)
-    pyplot.xlabel('Wavelength [$\AA$]')
-    pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
-    pyplot.xlim(1190, 1300)
-    pyplot.plot(norm_lines[0], norm_lines[1], 'b', lyalpha_arr_norm, norm_lines[1], 'r--')
-
-    pyplot.show()
     '''
+    # making all fonts biger
+    font = {#'family' : 'Vera Sans',
+            'weight' : 'regular',
+            'size'   : 15}
+    matplotlib.rc('font', **font)
+    
+    pyplot.figure(3, figsize=(10, 10))
+    #pyplot.title('My continuum fit')
+    #pyplot.suptitle(aka)
+    xlab = pyplot.xlabel('Wavelength [$\AA$]')
+    ylab = pyplot.ylabel('Normalized Flux')# [ergs/s/cm$^2$/$\AA$]')
+    # add some space between labels and axis
+    xlab.set_position((0.5, 0.02))
+    ylab.set_position((0.9, 0.5))
+    pyplot.xlim(1160, 1260)
+    pyplot.plot(norm_lines[0], norm_lines[1], 'b', lyalpha_arr[0], lyalpha_arr[1], 'r--')
+    # remove the firt tick so that they do not overlap
+    pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
+    # mark other important lines
+    pyplot.plot(cIII_mie_list, lyalpha_arr[1], 'r--', siIII_list, lyalpha_arr[1], 'r--', nV_list, lyalpha_arr[1], 'r--')
+    pyplot.plot(cIII_list, lyalpha_arr[1], 'r--')#, sII_list, lyalpha_arr[1], 'r--')
+    pyplot.text(cIII_mie-2, y_Lyalpha[N-1]+0.03, 'C III')
+    pyplot.text(siIII-2, y_Lyalpha[N-1]+0.03, 'Si III')
+    pyplot.text(Lyalpha-4, y_Lyalpha[N-1]+0.03, 'Ly-alpha')
+    pyplot.text(nV-2.5, y_Lyalpha[N-1]+0.03, 'N V')
+    pyplot.text(cIII-1, y_Lyalpha[N-1]+0.03, 'C III')
+    #pyplot.text(sII-1, y_Lyalpha[N-1]+0.03, 'S II')
+    epsfile = os.path.join(path_plots, aka+".eps")
+    pyplot.savefig(epsfile)
+    pyplot.show()    
+    
+    print("Do you want to save this plot?  [y/N , meaning NO is default... :P ]")
+    save_plt = raw_input()
+    pyplot.ioff()
+    if save_plt == 'n' or save_plt == '':
+        print('Plot not saved...   :( ')
+        os.remove(epsfile)
+    else:
+        print('Star %s was saved.' % aka)
+    
     # Adding theoretical continuum
     continuum = spectrum.theo_cont(norm_lines[0], scale_factor=1.0)
     
@@ -197,7 +260,7 @@ for i in range(0, len(seds)):
     star_counter = star_counter + 1
 
 #a.close()
-
+'''
 Oeqws_file = open(path_results+'Ostar_eqws.txt', 'w+')
 table_Ostars = []
 print >> Oeqws_file, 'SIGN CONVENTION: positive = emission,  negative = absorption'
@@ -209,6 +272,6 @@ for i in range(0, len(EQWs)):
     
 table.pprint_table(Oeqws_file, table_Ostars)
 Oeqws_file.close()
-
+'''
 
     
