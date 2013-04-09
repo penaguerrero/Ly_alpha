@@ -4,7 +4,10 @@ import numpy
 import string
 import table
 from spectrum import spectrum
-from spectrum import pyplot
+from matplotlib import pyplot
+from matplotlib.ticker import MaxNLocator
+from pylab import *
+
 
 '''
 This program produces text files of a size that splot can work with, and that is the right resolution: delta_lambda=0.465
@@ -45,7 +48,14 @@ path_plots = '../results/plots/'
 
 # MEASUREMENTS
 # Rest wavelength of Ly_alpha from NIST
-Lyalpha = 1215.6701
+Lyalpha = 1215.3 #1215.6701
+# rest wavelengths from Leitherer et al(2011), ApJ, 141, 37
+# the numbers are different because they look prettier in the plot
+cIII_mie = 1172.0 #1175.53
+siIII = 1202.3 #1206.50
+nV = 1242.80
+cIII = 1247.38
+sII = 1250.58
 
 
 ### CREATING TEXT FILES OF SELECTED RANGES
@@ -97,9 +107,6 @@ for i in range(0, len(norm_stars)):
     for j in spec_data[0]:
         lyalpha_arr_w.append(Lyalpha)            
     '''
-    # Plot limits
-    low = 1160
-    up = 1260
 
     # the line to mark Ly_alpha
     lya, _ = spectrum.find_nearest(spec_data[0], Lyalpha)
@@ -107,21 +114,54 @@ for i in range(0, len(norm_stars)):
     if flx_lya > 1.0:
         y_Lyalpha = [flx_lya+0.1, flx_lya+0.2]
     else:
-        y_Lyalpha = [0.8, 1.05]
+        y_Lyalpha = [1.0, 1.2]
     lyalpha_arr_norm = []
-    for i in range(0, len(y_Lyalpha)):
+    cIII_mie_list = []
+    siIII_list = []
+    nV_list =[]
+    cIII_list = []
+    sII_list = []
+    N = len(y_Lyalpha)
+    for i in range(0, N):
         lyalpha_arr_norm.append(Lyalpha)
+        cIII_mie_list.append(cIII_mie)
+        siIII_list.append(siIII)
+        nV_list.append(nV)
+        cIII_list.append(cIII)
+        sII_list.append(sII)
     lyalpha_arr = numpy.array([lyalpha_arr_norm, y_Lyalpha])
     
     star_name = base_name.replace(".txt", "")
     # Figure
+    # Plot limits
+    low = 1160
+    up = 1260
+    lo_y = -0.1
+    up_y = y_Lyalpha[N-1]+0.15
+    # making all fonts biger
+    font = {#'family' : 'Vera Sans',
+            'weight' : 'regular',
+            'size'   : 17}
+    matplotlib.rc('font', **font)
+    
     pyplot.figure(1, figsize=(10, 10))
     pyplot.xlabel('Wavelength [$\AA$]')
     pyplot.ylabel('Normalized Flux')# [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(low, up)
-    pyplot.ylim(-0.1, 1.1)
+    pyplot.ylim(lo_y,up_y)
     #pyplot.suptitle(norm_stars[i])
     pyplot.plot(spec_data[0], spec_data[1], 'b', lyalpha_arr[0], lyalpha_arr[1], 'r--')#, continuum_norm[0], continuum_norm[1], 'magenta')
+    # remove the firt tick so that they do not overlap
+    pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
+    # mark other important lines
+    pyplot.plot(cIII_mie_list, lyalpha_arr[1], 'r--', siIII_list, lyalpha_arr[1], 'r--', nV_list, lyalpha_arr[1], 'r--')
+    pyplot.plot(cIII_list, lyalpha_arr[1], 'r--')#, sII_list, lyalpha_arr[1], 'r--')
+    pyplot.text(cIII_mie-3, y_Lyalpha[N-1]+0.03, 'C III')
+    pyplot.text(siIII-3, y_Lyalpha[N-1]+0.03, 'Si III')
+    pyplot.text(Lyalpha-4.5, y_Lyalpha[N-1]+0.03, 'Ly-alpha')
+    pyplot.text(nV-4, y_Lyalpha[N-1]+0.03, 'N V')
+    pyplot.text(cIII-1, y_Lyalpha[N-1]+0.03, 'C III')
+    #pyplot.text(sII-1, y_Lyalpha[N-1]+0.03, 'S II')
     #epsfile = os.path.join(path_plots, star_name+".eps")
     #pyplot.savefig(epsfile)    
     pyplot.show()
