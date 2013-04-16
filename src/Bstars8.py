@@ -32,15 +32,6 @@ half_eqwstimes2_avoiding_N.append('half eqw*2 at 1235')
 half_eqwstimes2_avoiding_Si = []
 half_eqwstimes2_avoiding_Si.append('(LyA+20)*2')
 
-# Path to files
-#Bstarpath_v10andv2 = glob.glob('../Tlusty/solar/B*/')    # this is to get all the files with different turbulent velocities
-Bstarpath = '../Tlusty/solar/BGuvspec_v10/'
-Bstarpath2 = '../Tlusty/solar/BGuvspec_v2/'
-
-# Detailed spectrum files
-#specs = glob.glob(Bstarpath+'*.uv.7') # microturbulent velocity of 10
-specs = glob.glob(Bstarpath2+'*.uv.7')
-#specs = glob.glob(Bstarpath2+'BG28000g275v2.uv.7')
 
 
 path_results = '../results/BTlustyStars/'
@@ -59,8 +50,8 @@ sII = 1250.58
 
 
 ### CREATING TEXT FILES OF SELECTED RANGES
-total_files = len(specs)
-print("%d files" % (total_files))
+#total_files = len(specs)
+#print("%d files" % (total_files))
 
 ### Calling the selected and converted files
 norm_stars = glob.glob(path_results+'Norm_Bstar*')
@@ -113,15 +104,18 @@ for i in range(0, len(norm_stars)):
     flx_lya = spectrum.findXinY(spec_data[1], spec_data[0], lya)
     if flx_lya > 1.0:
         y_Lyalpha = [flx_lya+0.1, flx_lya+0.2]
+        N = len(y_Lyalpha)
+        upy = y_Lyalpha[N-1] + 0.15
     else:
         y_Lyalpha = [1.0, 1.2]
+        N = len(y_Lyalpha)
+        upy = y_Lyalpha[N-1] + 0.15
     lyalpha_arr_norm = []
     cIII_mie_list = []
     siIII_list = []
     nV_list =[]
     cIII_list = []
     sII_list = []
-    N = len(y_Lyalpha)
     for i in range(0, N):
         lyalpha_arr_norm.append(Lyalpha)
         cIII_mie_list.append(cIII_mie)
@@ -136,8 +130,8 @@ for i in range(0, len(norm_stars)):
     # Plot limits
     low = 1160
     up = 1260
-    lo_y = -0.1
-    up_y = y_Lyalpha[N-1]+0.15
+    lo_y = -0.05
+    up_y = upy
     # making all fonts biger
     font = {#'family' : 'Vera Sans',
             'weight' : 'regular',
