@@ -181,15 +181,18 @@ for i in range(0, len(seds)):
     flx_lya = spectrum.findXinY(norm_flx, norm_lines[0], lya)
     if flx_lya > 1.0:
         y_Lyalpha = [flx_lya+0.1, flx_lya+0.3]
+        N = len(y_Lyalpha)
+        upy = y_Lyalpha[N-1] + 0.15
     else:
         y_Lyalpha = [1.2, 1.5]
+        N = len(y_Lyalpha)
+        upy = y_Lyalpha[N-1] + 0.15
     lyalpha_arr_norm = []
     cIII_mie_list = []
     siIII_list = []
     nV_list =[]
     cIII_list = []
     sII_list = []
-    N = len(y_Lyalpha)
     for i in range(0, N):
         lyalpha_arr_norm.append(Lyalpha)
         cIII_mie_list.append(cIII_mie)
@@ -209,10 +212,16 @@ for i in range(0, len(seds)):
     pyplot.xlim(1190, 1300)
     pyplot.plot(data_rebinned[0], data_rebinned[1], 'b', lyalpha_arr_wav, data_rebinned[1], 'r--', my_cont_arr[0], my_cont_arr[1], 'g')
     '''
+
+    low = 1160
+    up = 1260
+    lo_y = -0.05
+    up_y = upy
+
     # making all fonts biger
     font = {#'family' : 'Vera Sans',
             'weight' : 'regular',
-            'size'   : 15}
+            'size'   : 17}
     matplotlib.rc('font', **font)
     
     pyplot.figure(3, figsize=(10, 10))
@@ -223,7 +232,8 @@ for i in range(0, len(seds)):
     # add some space between labels and axis
     xlab.set_position((0.5, 0.02))
     ylab.set_position((0.9, 0.5))
-    pyplot.xlim(1160, 1260)
+    pyplot.xlim(low, up)
+    pyplot.ylim(lo_y,up_y)
     pyplot.plot(norm_lines[0], norm_lines[1], 'b', lyalpha_arr[0], lyalpha_arr[1], 'r--')
     # remove the firt tick so that they do not overlap
     pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
