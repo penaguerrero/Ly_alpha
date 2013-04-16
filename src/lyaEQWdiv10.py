@@ -149,8 +149,9 @@ for i in range(0, len(table_fixed5)):
 f = open('../results/SB99eqws_NEW.txt', 'w+')
 table.pprint_table(f, table_out)
 f.close()
-'''
-            
+'''    
+    
+# PLOTs of the SFRs vs log(age)            
 lower = 6.3
 upper = 8
 font = {#'family' : 'Vera Sans',
@@ -258,5 +259,6 @@ epsfile = os.path.join(path_results, "Const_logAge_NEW2.eps")
 pyplot.ion()
 pyplot.savefig(epsfile)
 '''
+
 
 
