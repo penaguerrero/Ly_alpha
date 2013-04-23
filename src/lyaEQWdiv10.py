@@ -3,11 +3,11 @@ import numpy
 import matplotlib
 import string
 import os
-import table
-matplotlib.use("macosx")
+#import table
+#matplotlib.use("macosx")
 from matplotlib import pyplot
-from pylab import *
-from random import randrange
+#from pylab import *
+#from random import randrange
 from matplotlib.ticker import MaxNLocator
 
 '''
@@ -34,25 +34,28 @@ files_in_results = glob.glob('../results/SB99_round4/s99LyAeqw*_imf*.txt')
 path_results = '../results/plots/'
 
 
-IMFs = [#'0.5',
+IMFs = ['0.5',
+        #'0.8',
+        #'1.1',
         #'1.2',
-        '1.3',
-        #'1.4',#***
+        #'1.3',
+        #'1.4',
         #'1.5',
-        #'1.6',#***
-        #'1.7',
-        '1.8',#***
+        #'1.6',
+        '1.7',
+        #'1.8',
         #'1.9', 
         #'2.0', 
         #'2.1',
         #'2.2',
-        '2.3']#,
-        #'2.5']
+        '2.3',
+        #'2.5',
+        '2.6']
 
 total_chosenfiles = []
 
-colors = ['blue', 'red', 'green', 'magenta', 'k', '#594A2B', '#994A2B', '#2B494A', '#7E1BE0', '#1BE0D3', '#E0531B', '#94E01B', '#9868C4']
-file_count = 13
+colors = ['blue', 'red', 'green', 'magenta', 'k', 'cyan','#594A2B', '#994A2B', '#2B494A', '#7E1BE0', '#1BE0D3', '#E0531B', '#94E01B', '#9868C4']
+file_count = 14
 
 '''
 colors = []
@@ -149,7 +152,7 @@ for i in range(0, len(table_fixed5)):
 f = open('../results/SB99eqws_NEW.txt', 'w+')
 table.pprint_table(f, table_out)
 f.close()
-'''    
+'''
     
 # PLOTs of the SFRs vs log(age)            
 lower = 6.3
@@ -181,13 +184,13 @@ f1.text(6.33, 55, 'nebular')
 f1.text(6.4, 40, '+')  
 f1.text(6.36, 25, 'stellar')
 f1.text(7.2, 10, 'nebular component')  
-f1.text(7.58, 205 , 'IMF exp')
+f1.text(7.58, 206 , 'IMF exp')
 # adding the enhancement of the stellar component  
 f2 = figs.add_subplot(212)
 #f2.set_xlim(lower, upper) 
 f2.set_xlim(6.5, 7.3)
-f2.set_ylim(-20, -3.)
-f2.text(6.75, -7, 'stellar component')
+f2.set_ylim(-20, -2.)
+f2.text(6.6, -14, 'stellar component')
 # remove the first tick so that they do not overlap
 pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
 
@@ -199,17 +202,17 @@ f3.set_title('Constant SFR')
 figs.text(0.5, 0.06, 'log age [yr]', ha='center', va='center')
 figs.text(0.035, 0.5, 'Ly-alpha EW [$\AA$]', ha='center', va='center', rotation='vertical')
 f3.set_xlim(lower, upper)
-#f3.set_ylim(-15, 170)
-f3.text(6.6, 6, 'stellar component')   
-f3.text(7.15, 60, 'total = nebular + stellar')   
-f3.text(6.8, 200, 'nebular component')   
-f3.text(7.62, 275, 'IMF exp')  
+f3.set_ylim(-50, 400)
+f3.text(6.5, 6, 'stellar component')   
+f3.text(7.15, 38, 'total = nebular + stellar')   
+f3.text(6.8, 212, 'nebular component')   
+f3.text(7.62, 348, 'IMF exp')  
 # adding the enhancement of the stellar component  
 f4 = figs.add_subplot(212)#, sharex=f3)
 #f4.set_xlim(lower, upper) 
 f4.set_xlim(6.5, 7.3)
-f4.set_ylim(-8, -1.0)
-f4.text(6.67, -1.8, 'stellar component')   
+f4.set_ylim(-10, -0.5)
+f4.text(6.6, -6.4, 'stellar component')   
 # remove the first tick so that they do not overlap
 pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
 
@@ -241,7 +244,7 @@ for i in range(0, len(constant_tot)):
     curve.set_linestyle('--')
 
 leg1 = pyplot.figure(1).legend(curves_inst, IMFs, bbox_to_anchor=(0.85, 0.85))  
-leg2 = pyplot.figure(2).legend(curves_cont, IMFs, bbox_to_anchor=(0.87, 0.88), labelspacing=0.2)
+leg2 = pyplot.figure(2).legend(curves_cont, IMFs, bbox_to_anchor=(0.87, 0.86), labelspacing=0.2)
 for t in leg1.get_texts():
     t.set_fontsize(12)     
 for t in leg2.get_texts():
@@ -251,11 +254,11 @@ pyplot.show()
 '''
 # Saving the plots
 pyplot.figure(1)
-epsfile = os.path.join(path_results, "Inst_logAge_NEW2.eps")
+epsfile = os.path.join(path_results, "Inst_logAge_NEW3.eps")
 pyplot.savefig(epsfile)#, dpi=(100))
 
 pyplot.figure(2)
-epsfile = os.path.join(path_results, "Const_logAge_NEW2.eps")
+epsfile = os.path.join(path_results, "Const_logAge_NEW3.eps")
 pyplot.ion()
 pyplot.savefig(epsfile)
 '''
