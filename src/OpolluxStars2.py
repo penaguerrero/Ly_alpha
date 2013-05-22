@@ -246,10 +246,11 @@ for i in range(0, len(seds)):
     pyplot.text(nV-2.5, y_Lyalpha[N-1]+0.03, 'N V')
     pyplot.text(cIII-1, y_Lyalpha[N-1]+0.03, 'C III')
     #pyplot.text(sII-1, y_Lyalpha[N-1]+0.03, 'S II')
-    epsfile = os.path.join(path_plots, aka+".eps")
-    pyplot.savefig(epsfile)
+    #epsfile = os.path.join(path_plots, aka+".eps")
+    #pyplot.savefig(epsfile)
     pyplot.show()    
     
+    '''
     print("Do you want to save this plot?  [y/N , meaning NO is default... :P ]")
     save_plt = raw_input()
     pyplot.ioff()
@@ -258,6 +259,7 @@ for i in range(0, len(seds)):
         os.remove(epsfile)
     else:
         print('Star %s was saved.' % aka)
+    '''
     
     # Adding theoretical continuum
     continuum = spectrum.theo_cont(norm_lines[0], scale_factor=1.0)
