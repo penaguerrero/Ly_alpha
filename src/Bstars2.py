@@ -101,8 +101,8 @@ print("%d files" % (total_files))
 v2 = 'v2'
 v10 = 'v10'
 # This is the dictionary of aliases and actual names
-logAliasBstars = {'Files divided': 'Alias'}
-logAliasBstars.update({'Files divided': 'Alias'})
+logAliasBstars = {'Files divided': 'string', 'Alias': 'string'}
+logAliasBstars.update({'Files divided', 'Alias'})
 
 for i in range(0, total_files):
     if v2 in specs[i]:
@@ -135,6 +135,7 @@ for i in range(0, total_files):
     logAliasBstars.update({specs[i]: bstar_result_path})
     logAliasBstars.update({conts[i]: ' '})
 
+'''
 logAliasBstars_filev2 = open(os.path.join(path_results, 'logAliasBstars_v10.txt'), 'w+')
 logAliasBstars_filev10 = open(os.path.join(path_results, 'logAliasBstars_v2.txt'), 'w+')
 if v2 in specs[i]:
@@ -146,7 +147,7 @@ elif v10 in specs[i]:
 logAliasBstars_filev2.close()
 logAliasBstars_filev10.close()
 
-'''
+
 ### Calling the selected and converted files
 norm_stars = glob.glob(path_results+'/Norm_B*_109.txt')
 for i in range(0, len(norm_stars)):
