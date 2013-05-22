@@ -63,7 +63,7 @@ for i in range(0, len(norm_stars)):
         N = len(y_Lyalpha)
         upy = y_Lyalpha[N-1] + 0.1
     else:
-        y_Lyalpha = [1.0, 1.2]
+        y_Lyalpha = [1.02, 1.2]
         N = len(y_Lyalpha)
         upy = y_Lyalpha[N-1] + 0.1
     lyalpha_arr_norm = []
@@ -81,6 +81,11 @@ for i in range(0, len(norm_stars)):
         sII_list.append(sII)
     lyalpha_arr = numpy.array([lyalpha_arr_norm, y_Lyalpha])
     
+    # the line that marks the where the EW was inegrated from
+    int_limits = [Lyalpha, Lyalpha+20.0]
+    y_int = [1.0, 1.0]
+    integration = numpy.array([int_limits, y_int])
+
     star_name = base_name.replace(".txt", "")
     # Figure
     # Plot limits
@@ -101,8 +106,9 @@ for i in range(0, len(norm_stars)):
     pyplot.ylim(lo_y,up_y)
     #pyplot.suptitle(norm_stars[i])
     pyplot.plot(spec_data[0], spec_data[1], 'b', lyalpha_arr[0], lyalpha_arr[1], 'r--')#, continuum_norm[0], continuum_norm[1], 'magenta')
+    pyplot.plot(integration[0], integration[1], 'r')
     # remove the firt tick so that they do not overlap
-    pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
+    pyplot.gca().yaxis.set_major_locator(MaxNLocator(9, prune='lower'))
     # mark other important lines
     pyplot.plot(cIII_mie_list, lyalpha_arr[1], 'r--', siIII_list, lyalpha_arr[1], 'r--', nV_list, lyalpha_arr[1], 'r--')
     pyplot.plot(cIII_list, lyalpha_arr[1], 'r--')#, sII_list, lyalpha_arr[1], 'r--')
