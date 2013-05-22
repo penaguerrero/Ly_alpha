@@ -14,7 +14,7 @@ path_plots = '../results/plots/'
 plot_name = 'EWvsTeff.eps'
 
 logg = [2.25, 3.25, 4.25]
-temps = [15., 16., 17., 18., 19., 20., 21., 22., 23., 24., 25., 26., 27., 28., 29., 30., 32.5, 35., 37.5, 40., 42.5, 45., 50.]
+temps = [15., 16., 17., 18., 19., 20., 21., 22., 23., 24., 25., 26., 27., 28., 29., 30., 32.5, 35., 37.5, 40., 42.5, 45., 48.5]
 teff = []
 for t in temps:
     Te = t*1000.
@@ -35,9 +35,21 @@ ylab = pyplot.ylabel('Lyman-alpha Equivalent Width [$\AA$]')
 # add some space between labels and axis
 xlab.set_position((0.5, 0.02))
 ylab.set_position((0.9, 0.5))
-c1 = pyplot.plot(teff, data[0], 'bo-')
-c2 = pyplot.plot(teff, data[1], 'rs-')
-c3 = pyplot.plot(teff, data[2], 'g^-')
+# change the symbols according to  cmfgen or tlusty
+for i in range(0, len(teff)):
+    if teff[i] < 30000:
+        pyplot.plot(teff[i], data[0][i], 'bo-')
+        pyplot.plot(teff[i], data[1][i], 'rs-')
+        pyplot.plot(teff[i], data[2][i], 'g^-')
+    else:
+        pyplot.plot(teff[i], data[0][i], 'bo-', mfc='None')
+        pyplot.plot(teff[i], data[1][i], 'rs-', mfc='None')
+        pyplot.plot(teff[i], data[2][i], 'g^-', mfc='None')
+
+c1 = pyplot.plot(teff, data[0], 'b')
+c2 = pyplot.plot(teff, data[1], 'r')
+c3 = pyplot.plot(teff, data[2], 'g')
+        
 curves = []
 curves.append(c1)
 curves.append(c2)
