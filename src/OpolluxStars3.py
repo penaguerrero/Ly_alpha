@@ -1,7 +1,7 @@
 import numpy
-import glob
+#import glob
 import os
-import string
+#import string
 from matplotlib import pyplot
 from pylab import *
 from spectrum import spectrum
@@ -86,7 +86,12 @@ for s in stars:
     nV_arr = ref_line(norm_lines, nV, above=False, below=True)
     cIII_arr = ref_line(norm_lines, cIII, above=False, below=False)
     sII_arr = ref_line(norm_lines, sII, above=False, below=False)
-        
+    
+    # the line that marks the where the EW was inegrated from
+    int_limits = [Lyalpha-5.0, Lyalpha+5.0]
+    y_int = [1.0, 1.0]
+    integration = numpy.array([int_limits, y_int])
+    
     low = 1160
     up = 1260
     lo_y = -0.05
@@ -106,6 +111,7 @@ for s in stars:
     ylab.set_position((0.9, 0.5))
     pyplot.xlim(low, up)
     pyplot.plot(norm_lines[0], norm_lines[1], 'b', lyalpha_arr[0], lyalpha_arr[1], 'r--')
+    pyplot.plot(integration[0], integration[1], 'r')
     # remove the firt tick so that they do not overlap
     pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
     # mark other important lines
