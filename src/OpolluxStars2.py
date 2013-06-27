@@ -3,10 +3,10 @@ import glob
 import os
 import string
 import table
-from matplotlib import pyplot
-from pylab import *
+#from matplotlib import pyplot
+#from pylab import *
 from spectrum import spectrum
-from matplotlib.ticker import MaxNLocator
+#from matplotlib.ticker import MaxNLocator
 
 
 '''
@@ -72,10 +72,13 @@ for i in range(0, len(seds)):
     base_seds = os.path.basename(seds[i])
     base_name2 = string.split(base_seds, sep='z')
     base_name3 = string.split(base_name2[0], sep='g')
+    base_name4 = string.split(base_name2[1], sep='_')
+    base_name5 = string.split(base_name4[0], sep='t')
+    mtvel = base_name5[1].replace(".0", "")
     Teff = base_name3[0].replace("C_s", "")
     logg = base_name3[1]
-    print(Teff, logg)
-    aka='Ostar'+repr(star_counter)+'_'+Teff+'g'+logg
+    print(Teff, logg, mtvel)
+    aka='Ostar'+repr(star_counter)+'.v'+mtvel+'_'+Teff+'g'+logg
     print(aka) 
     AKAs.append(aka)   
     
@@ -218,6 +221,7 @@ for i in range(0, len(seds)):
     lo_y = -0.05
     up_y = upy
 
+    '''
     # making all fonts biger
     font = {#'family' : 'Vera Sans',
             'weight' : 'regular',
@@ -250,7 +254,6 @@ for i in range(0, len(seds)):
     #pyplot.savefig(epsfile)
     pyplot.show()    
     
-    '''
     print("Do you want to save this plot?  [y/N , meaning NO is default... :P ]")
     save_plt = raw_input()
     pyplot.ioff()
@@ -272,18 +275,18 @@ for i in range(0, len(seds)):
     star_counter = star_counter + 1
 
 #a.close()
-'''
-Oeqws_file = open(path_results+'Ostar_eqws.txt', 'w+')
+
+Oeqws_file = open(path_results+'Ostar_eqws2.txt', 'w+')
 table_Ostars = []
 print >> Oeqws_file, 'SIGN CONVENTION: positive = emission,  negative = absorption'
 
 for i in range(0, len(EQWs)):
-    print(AKAs[i]+'EQW = %f' % EQWs[i])
+    print(AKAs[i]+'    EQW = %f' % EQWs[i])
     temp = [AKAs[i], repr(EQWs[i])]
     table_Ostars.append(temp)
     
 table.pprint_table(Oeqws_file, table_Ostars)
 Oeqws_file.close()
-'''
+
 
     
