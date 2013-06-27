@@ -1,5 +1,5 @@
 import os
-import glob
+#import glob
 import numpy
 import string
 from spectrum import spectrum
@@ -34,7 +34,8 @@ path_results = '../results/BTlustyStars/'
 path_plots = '../results/plots/'
 
 # list of the stars to be ploted
-norm_stars = [path_results+'Norm_Bstar_0_v10_15000g175.txt', path_results+'Norm_Bstar_38_v2_18000g225.txt']
+norm_stars = [#path_results+'Norm_Bstar_0_v10_15000g175.txt', 
+              path_results+'Norm_Bstar_38_v2_18000g225.txt']
 # OR when I want to see the plot of ALL stars use the following line:
 #norm_stars = glob.glob(path_results+'Norm_Bstar*')
 
@@ -61,11 +62,11 @@ for i in range(0, len(norm_stars)):
     if flx_lya > 1.0:
         y_Lyalpha = [flx_lya+0.1, flx_lya+0.2]
         N = len(y_Lyalpha)
-        upy = y_Lyalpha[N-1] + 0.1
+        upy = y_Lyalpha[N-1] + 0.12
     else:
         y_Lyalpha = [1.02, 1.2]
         N = len(y_Lyalpha)
-        upy = y_Lyalpha[N-1] + 0.1
+        upy = y_Lyalpha[N-1] + 0.12
     lyalpha_arr_norm = []
     cIII_mie_list = []
     siIII_list = []
@@ -85,6 +86,11 @@ for i in range(0, len(norm_stars)):
     int_limits = [Lyalpha, Lyalpha+20.0]
     y_int = [1.0, 1.0]
     integration = numpy.array([int_limits, y_int])
+    
+    # line of the continuum
+    continuum_plot = []
+    for i in spec_data[0]:
+        continuum_plot.append(1.0)
 
     star_name = base_name.replace(".txt", "")
     # Figure
@@ -99,14 +105,15 @@ for i in range(0, len(norm_stars)):
             'size'   : 17}
     matplotlib.rc('font', **font)
     
-    pyplot.figure(1, figsize=(10, 10))
+    pyplot.figure(1, figsize=(10, 6))
     pyplot.xlabel('Wavelength [$\AA$]')
     pyplot.ylabel('Normalized Flux')# [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(low, up)
     pyplot.ylim(lo_y,up_y)
     #pyplot.suptitle(norm_stars[i])
-    pyplot.plot(spec_data[0], spec_data[1], 'b', lyalpha_arr[0], lyalpha_arr[1], 'r--')#, continuum_norm[0], continuum_norm[1], 'magenta')
-    pyplot.plot(integration[0], integration[1], 'r')
+    pyplot.plot(spec_data[0], spec_data[1], 'k', lyalpha_arr[0], lyalpha_arr[1], 'r--')#, continuum_norm[0], continuum_norm[1], 'magenta')
+    pyplot.plot(spec_data[0], continuum_plot, 'r:')         #continuum
+    pyplot.plot(integration[0], integration[1], 'r', lw=2)  #integration interval
     # remove the firt tick so that they do not overlap
     pyplot.gca().yaxis.set_major_locator(MaxNLocator(9, prune='lower'))
     # mark other important lines
