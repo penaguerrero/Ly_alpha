@@ -92,6 +92,11 @@ for s in stars:
     y_int = [1.0, 1.0]
     integration = numpy.array([int_limits, y_int])
     
+    # line of the continuum
+    continuum_plot = []
+    for i in norm_lines[0]:
+        continuum_plot.append(1.0)
+
     low = 1160
     up = 1260
     lo_y = -0.05
@@ -103,15 +108,16 @@ for s in stars:
     matplotlib.rc('font', **font)
     
     N = len(lyalpha_arr[0])
-    pyplot.figure(3, figsize=(10, 10))
+    pyplot.figure(3, figsize=(10, 6))
     xlab = pyplot.xlabel('Wavelength [$\AA$]')
     ylab = pyplot.ylabel('Normalized Flux')# [ergs/s/cm$^2$/$\AA$]')
     # add some space between labels and axis
     xlab.set_position((0.5, 0.02))
     ylab.set_position((0.9, 0.5))
     pyplot.xlim(low, up)
-    pyplot.plot(norm_lines[0], norm_lines[1], 'b', lyalpha_arr[0], lyalpha_arr[1], 'r--')
-    pyplot.plot(integration[0], integration[1], 'r')
+    pyplot.plot(norm_lines[0], norm_lines[1], 'k', lyalpha_arr[0], lyalpha_arr[1], 'r--')
+    pyplot.plot(norm_lines[0], continuum_plot, 'r:')         #continuum
+    pyplot.plot(integration[0], integration[1], 'r', lw=2)  # integration interval
     # remove the firt tick so that they do not overlap
     pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
     # mark other important lines
@@ -125,9 +131,9 @@ for s in stars:
     #pyplot.text(cIII-1, y_Lyalpha[N-1]+0.03, 'C III')
     #pyplot.text(sII-1, y_Lyalpha[N-1]+0.03, 'S II')
     # When the legend looks better below
-    pyplot.text(Lyalpha-4, 0.4-0.06, 'Ly-alpha')
-    pyplot.text(nV-3.5, 0.4-0.06, 'N V')
-    pyplot.text(cIII-0.5, 0.4-0.06, 'C III')
+    pyplot.text(Lyalpha-4, 0.4-0.09, 'Ly-alpha')
+    pyplot.text(nV-3.5, 0.4-0.09, 'N V')
+    pyplot.text(cIII-0.5, 0.4-0.09, 'C III')
     epsfile = os.path.join(path_plots, base_name2+".eps")
     pyplot.savefig(epsfile)
     pyplot.show()    
