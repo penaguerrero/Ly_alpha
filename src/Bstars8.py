@@ -3,7 +3,7 @@ import glob
 import numpy
 import string
 import table
-from spectrum import spectrum
+from science import spectrum
 from matplotlib import pyplot
 from matplotlib.ticker import MaxNLocator
 from pylab import *
@@ -143,7 +143,7 @@ for i in range(0, len(norm_stars)):
     pyplot.ylabel('Normalized Flux')# [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(low, up)
     pyplot.ylim(lo_y,up_y)
-    #pyplot.suptitle(norm_stars[i])
+    pyplot.suptitle('Teff = '+Teff+'   log g = '+logg)#norm_stars[i])
     pyplot.plot(spec_data[0], spec_data[1], 'b', lyalpha_arr[0], lyalpha_arr[1], 'r--')#, continuum_norm[0], continuum_norm[1], 'magenta')
     # remove the firt tick so that they do not overlap
     pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
