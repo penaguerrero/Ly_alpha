@@ -63,6 +63,7 @@ epsfile = os.path.join(path_plots, plot_name)
 pyplot.savefig(epsfile)
 pyplot.show()    
 
+'''
 print("Do you want to save this plot?  [y/N , meaning NO is default... :P ]")
 save_plt = raw_input()
 pyplot.ioff()
@@ -71,6 +72,6 @@ if save_plt == 'n' or save_plt == '':
     os.remove(epsfile)
 else:
     print('Plot %s was saved.' % plot_name)
-
+'''
 
 print ('Done!')
