@@ -8,7 +8,7 @@ matplotlib.use("macosx")
 #from pylab import *
 #from random import randrange
 from matplotlib.ticker import MaxNLocator
-from spectrum import spectrum 
+from science import spectrum 
 from matplotlib import pyplot
 
 '''
@@ -43,20 +43,20 @@ fixed_neb = []
 fixed_tot = []
 i = 0
 IMFs = ['0.5',
-        '0.8',
-        '1.1',
+        #'0.8',
+        #'1.1',
         #'1.2',
         #'1.3',
         #'1.4',
         #'1.5',
         #'1.6',
-        #'1.7',
+        '1.7',
         #'1.8',
         #'1.9', 
         #'2.0', 
         #'2.1',
         #'2.2',
-        #'2.3',
+        '2.3',
         #'2.5',
         '2.6']
 
@@ -233,7 +233,7 @@ f1.text(6.33, 70, 'nebular')
 f1.text(6.4, 55, '+')  
 f1.text(6.36, 40, 'stellar')
 f1.text(7.2, 10, 'nebular component')  
-f1.text(7.6, 205 , 'IMF exp')
+f1.text(7.6, 207 , 'IMF exp')
 # adding the enhancement of the stellar component  
 f2 = figs.add_subplot(212)
 #f2.set_xlim(lower, upper) 
@@ -253,15 +253,15 @@ figs.text(0.035, 0.5, 'Ly-alpha EW [$\AA$]', ha='center', va='center', rotation=
 f3.set_xlim(lower, upper)
 #f3.set_ylim(-15, 170)
 f3.text(6.6, 6, 'stellar component')   
-f3.text(7.3, 60, 'total = nebular + stellar')   
-f3.text(6.8, 200, 'nebular component')   
-f3.text(7.65, 270, 'IMF exp')  
+f3.text(7.3, 40, 'total = nebular + stellar')   
+f3.text(6.8, 210, 'nebular component')   
+f3.text(7.65, 315, 'IMF exp')  
 # adding the enhancement of the stellar component  
 f4 = figs.add_subplot(212)#, sharex=f3)
 #f4.set_xlim(lower, upper) 
 f4.set_xlim(6.5, 7.3)
 f4.set_ylim(-8, -1.0)
-f4.text(6.67, -1.8, 'stellar component')   
+f4.text(6.67, -1.7, 'stellar component')   
 # remove the first tick so that they do not overlap
 pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
 
@@ -273,10 +273,10 @@ for i in range(0, len(constant_tot)):
     
     curve, = f1.plot(fixed_ste[i][0], fixed_ste[i][1], colors[i])
     curve.set_linestyle('--')
-    curve_i, = f1.plot(fixed_neb[i][0], fixed_neb[i][1], colors[i])
-    curves_inst.append(curve_i)
-    curve, = f1.plot(fixed_tot[i][0], fixed_tot[i][1], colors[i])
+    curve, = f1.plot(fixed_neb[i][0], fixed_neb[i][1], colors[i])
     curve.set_linestyle(':')
+    curve_i, = f1.plot(fixed_tot[i][0], fixed_tot[i][1], colors[i])
+    curves_inst.append(curve_i)
     # the stellar enhancement
     curve, = f2.plot(fixed_ste[i][0], fixed_ste[i][1], colors[i])
     curve.set_linestyle('--')
@@ -284,10 +284,10 @@ for i in range(0, len(constant_tot)):
     #pyplot.figure(2)
     curve, = f3.plot(constant_ste[i][0], constant_ste[i][1], colors[i])
     curve.set_linestyle('--')
-    curve_c, = f3.plot(constant_neb[i][0], constant_neb[i][1], colors[i])
-    curves_cont.append(curve_c)
-    curve, = f3.plot(constant_tot[i][0], constant_tot[i][1], colors[i])
+    curve, = f3.plot(constant_neb[i][0], constant_neb[i][1], colors[i])
     curve.set_linestyle(':')
+    curve_c, = f3.plot(constant_tot[i][0], constant_tot[i][1], colors[i])
+    curves_cont.append(curve_c)
     # the stellar enhancement
     curve, = f4.plot(constant_ste[i][0], constant_ste[i][1], colors[i])
     curve.set_linestyle('--')
@@ -303,13 +303,13 @@ pyplot.show()
 '''
 # Saving the plots
 pyplot.figure(1)
-epsfile = os.path.join(path_results, "Inst_logAge_NEW2.eps")
+epsfile = os.path.join(path_plots, "Inst_logAge_NEW4.eps")
 pyplot.savefig(epsfile)#, dpi=(100))
 
 pyplot.figure(2)
-epsfile = os.path.join(path_results, "Const_logAge_NEW2.eps")
-pyplot.ion()
+epsfile = os.path.join(path_plots, "Const_logAge_NEW4.eps")
 pyplot.savefig(epsfile)
+pyplot.ion()
 '''
 
 print('Done!')
