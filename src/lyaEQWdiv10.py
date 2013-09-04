@@ -133,6 +133,7 @@ for txt_file in tot_lyas_files:
                 table_const15.append([data[1][j], data[3][j], data[5][j]])
     i = i + 1
 
+
 '''
 # The pretty table of the data
 table_out = []
