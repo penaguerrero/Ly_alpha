@@ -2,8 +2,8 @@ import os
 import glob
 import numpy
 import string
-from spectrum import spectrum
-from spectrum import pyplot
+from science import spectrum
+from matplotlib import pyplot
 
 '''
 This program produces text files of a size that splot can work with.
@@ -67,13 +67,13 @@ for i in range(0, total_files):
     elif v10 in specs[i]:
         bstar_result_path = os.path.join(path_results, 'Norm_Bstar_' + repr(i) + '_v10_' + templogg + '.txt')
         #bstar_result_path = os.path.join(path_results, 'Norm_BL30000g425v10.txt')
-    #A, cgs = numpy.loadtxt(specs[i], dtype=float, unpack=True)
-    #A_cont, cgs_cont = numpy.loadtxt(conts[i], dtype=float, unpack=True)
-    #print("%d of %d: [ %s, %s ] ... " % (i+1,total_files, os.path.basename(specs[i]), os.path.basename(conts[i])))
+    A, cgs = numpy.loadtxt(specs[i], dtype=float, unpack=True)
+    A_cont, cgs_cont = numpy.loadtxt(conts[i], dtype=float, unpack=True)
+    print("%d of %d: [ %s, %s ] ... " % (i+1,total_files, os.path.basename(specs[i]), os.path.basename(conts[i])))
     
     aka = 'Bstar_'+repr(i)+'.v2.'+templogg
     normBstars.append(aka)
-    '''
+    
     # Selecting the range for Ly_alpha
     wav, flx = spectrum.selection(A, cgs, lowav, upwav)       
     wav_cont, flx_cont = spectrum.selection(A_cont, cgs_cont, lowav, upwav)
@@ -91,6 +91,7 @@ for i in range(0, total_files):
     # Dividing spectra over continuum
     norm_flx = rebin_spec[1] / rebin_cont[1]
     
+    '''
     # Writting to text files
     txtout = open(bstar_result_path, 'w+')
     for j in range(0, len(norm_flx)):
@@ -98,7 +99,7 @@ for i in range(0, total_files):
             txtout.write((rebin_spec[0][j].__repr__() + " " + norm_flx[j].__repr__()) + "\n")
     txtout.close()
     print("\n")
-    '''    
+    '''
 
 ### Calling the selected and converted files
 norm_stars = glob.glob(path_results+'Norm_Bstar*v2*')
