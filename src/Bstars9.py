@@ -2,7 +2,7 @@ import os
 #import glob
 import numpy
 import string
-from spectrum import spectrum
+from science import spectrum
 from matplotlib import pyplot
 from matplotlib.ticker import MaxNLocator
 from pylab import *
@@ -34,8 +34,9 @@ path_results = '../results/BTlustyStars/'
 path_plots = '../results/plots/'
 
 # list of the stars to be ploted
-norm_stars = [#path_results+'Norm_Bstar_0_v10_15000g175.txt', 
-              path_results+'Norm_Bstar_38_v2_18000g225.txt']
+norm_stars = [path_results+'Norm_Bstar_17_v2_16000g300.txt', 
+              path_results+'Norm_Bstar_86_v2_22000g375.txt',
+              path_results+'Norm_Bstar_115_v2_25000g375.txt']
 # OR when I want to see the plot of ALL stars use the following line:
 #norm_stars = glob.glob(path_results+'Norm_Bstar*')
 
