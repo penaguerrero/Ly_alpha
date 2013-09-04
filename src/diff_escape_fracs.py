@@ -8,7 +8,7 @@ matplotlib.use("macosx")
 #from pylab import *
 #from random import randrange
 from matplotlib.ticker import MaxNLocator
-from spectrum import spectrum 
+from science import spectrum 
 from matplotlib import pyplot
 
 '''
@@ -334,10 +334,10 @@ for i in range(0, len(constant_tot)):
     
     curve, = f1.plot(fixed_ste[i][0], fixed_ste[i][1], colors[i])
     curve.set_linestyle('--')
-    curve_i, = f1.plot(fixed_neb[i][0], fixed_neb[i][1], colors[i])
-    curves_inst.append(curve_i)
-    curve, = f1.plot(fixed_tot[i][0], fixed_tot[i][1], colors[i])
+    curve, = f1.plot(fixed_neb[i][0], fixed_neb[i][1], colors[i])
     curve.set_linestyle(':')
+    curve_i, = f1.plot(fixed_tot[i][0], fixed_tot[i][1], colors[i])
+    curves_inst.append(curve_i)
     # the stellar enhancement
     #curve, = f2.plot(fixed_ste[i][0], fixed_ste[i][1], colors[i])
     #curve.set_linestyle('--')
@@ -345,10 +345,10 @@ for i in range(0, len(constant_tot)):
     #pyplot.figure(2)
     curve, = f3.plot(constant_ste[i][0], constant_ste[i][1], colors[i])
     curve.set_linestyle('--')
-    curve_c, = f3.plot(constant_neb[i][0], constant_neb[i][1], colors[i])
-    curves_cont.append(curve_c)
-    curve, = f3.plot(constant_tot[i][0], constant_tot[i][1], colors[i])
+    curve, = f3.plot(constant_neb[i][0], constant_neb[i][1], colors[i])
     curve.set_linestyle(':')
+    curve_c, = f3.plot(constant_tot[i][0], constant_tot[i][1], colors[i])
+    curves_cont.append(curve_c)
     # the stellar enhancement
     #curve, = f4.plot(constant_ste[i][0], constant_ste[i][1], colors[i])
     #curve.set_linestyle('--')
@@ -364,11 +364,11 @@ pyplot.show()
 '''
 # Saving the plots
 pyplot.figure(1)
-epsfile = os.path.join(path_plots, "Inst_diffEscFrac.eps")
+epsfile = os.path.join(path_plots, "Inst_diffEscFrac2.eps")
 pyplot.savefig(epsfile)#, dpi=(100))
 
 pyplot.figure(2)
-epsfile = os.path.join(path_plots, "Const_diffEscFrac.eps")
+epsfile = os.path.join(path_plots, "Const_diffEscFrac2.eps")
 pyplot.ion()
 pyplot.savefig(epsfile)
 '''
