@@ -2,8 +2,8 @@ import numpy
 import string
 import table
 import operator
-from spectrum import spectrum
-from spectrum import pyplot
+from science import spectrum
+from matplotlib import pyplot
 from scipy.stats import mode
 
 '''
