@@ -203,6 +203,59 @@ for foldr in total_chosenfiles:
     print('file  %s   is now written!' % (path_results+'s99LyAeqw'+file_name+'.txt'))
         
     i = i+1
+
+# Give me the values of the EWs at the specified age and print it on the screen with a specific IMF 
+# Salpeter IMF in this case, IMF = 2.3
+ages = [5e6, 15e6]
+EWs_file_list = glob.glob(os.path.join(path_results, 's99LyAeqw*_imf2.3.txt'))
+cont_ew_ste = 0.0
+cont_ew_neb = 0.0
+cont_ew_tot = 0.0
+fixed_ew_ste = 0.0
+fixed_ew_neb = 0.0
+fixed_ew_tot = 0.0
+# the numbers in these list correspond to the ages list: 1st number at 1st age, ...
+cont_ew_ste_list = []
+cont_ew_neb_list = []
+cont_ew_tot_list = []
+fixed_ew_ste_list = []
+fixed_ew_neb_list = []
+fixed_ew_tot_list = []
+for f in EWs_file_list:
+    dataEWs = numpy.loadtxt(f, dtype=numpy.float64, skiprows=1, unpack=True)
+    # dataEWs: 0=ste_age, 1=ste_eqw, 2=neb_age, 3=neb_eqw, 4=log age, 5=tot_eqw
+    print 'This is file %s' % f
+    if 'fixed' in f:
+        for age in ages:
+            for i in range(len(dataEWs[0])):
+                if age == dataEWs[0][i]:
+                    fixed_ew_ste = dataEWs[1][dataEWs[0] == age]
+                    fixed_ew_neb = dataEWs[3][dataEWs[0] == age]
+                    fixed_ew_tot = dataEWs[5][dataEWs[0] == age]
+                else:
+                    fixed_ew_ste = numpy.interp(age, dataEWs[0], dataEWs[1])
+                    fixed_ew_neb = numpy.interp(age, dataEWs[0], dataEWs[3])
+                    fixed_ew_tot = numpy.interp(age, dataEWs[0], dataEWs[5])
+            fixed_ew_ste_list.append(fixed_ew_ste)
+            fixed_ew_neb_list.append(fixed_ew_neb)
+            fixed_ew_tot_list.append(fixed_ew_tot)
+        print 'fixed_ew_ste_list, fixed_ew_neb_list, fixed_ew_tot_list', fixed_ew_ste_list, fixed_ew_neb_list, fixed_ew_tot_list
+    elif 'continous' in f:
+        for age in ages:
+            for i in range(len(dataEWs[0])):
+                if age == dataEWs[0][i]:
+                    cont_ew_ste = dataEWs[1][dataEWs[0] == age]
+                    cont_ew_neb = dataEWs[3][dataEWs[0] == age]
+                    cont_ew_tot = dataEWs[5][dataEWs[0] == age]
+                else:
+                    cont_ew_ste = numpy.interp(age, dataEWs[0], dataEWs[1])
+                    cont_ew_neb = numpy.interp(age, dataEWs[0], dataEWs[3])
+                    cont_ew_tot = numpy.interp(age, dataEWs[0], dataEWs[5])
+            cont_ew_ste_list.append(cont_ew_ste)
+            cont_ew_neb_list.append(cont_ew_neb)
+            cont_ew_tot_list.append(cont_ew_tot)
+        print 'cont_ew_ste_list, cont_ew_neb_list, cont_ew_tot_list', cont_ew_ste_list, cont_ew_neb_list, cont_ew_tot_list
+
     
 lower = 6.3
 upper = 8
@@ -228,10 +281,10 @@ f1.set_title('Instantaneous SFR')
 f1.set_xlim(lower, upper)
 f1.set_ylim(-60, 250)
 f1.text(6.5, -30, 'stellar component')   
-f1.text(6.33, 90, 'total=')   
-f1.text(6.33, 70, 'nebular')   
-f1.text(6.4, 55, '+')  
-f1.text(6.36, 40, 'stellar')
+f1.text(6.33, 70, 'total=')   
+f1.text(6.33, 50, 'nebular')   
+f1.text(6.4, 35, '+')  
+f1.text(6.36, 20, 'stellar')
 f1.text(7.2, 10, 'nebular component')  
 f1.text(7.6, 207 , 'IMF exp')
 # adding the enhancement of the stellar component  
@@ -240,6 +293,8 @@ f2 = figs.add_subplot(212)
 f2.set_xlim(6.5, 7.3)
 f2.set_ylim(-20, -3.)
 f2.text(6.75, -7, 'stellar component')
+f2.text(7.0, -13.3, 'IMF exp = 0.5', rotation=-21)
+f2.text(6.9, -14.95, 'IMF exp = 2.6', rotation=-27)
 # remove the first tick so that they do not overlap
 pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
 
@@ -253,15 +308,19 @@ figs.text(0.035, 0.5, 'Ly-alpha EW [$\AA$]', ha='center', va='center', rotation=
 f3.set_xlim(lower, upper)
 #f3.set_ylim(-15, 170)
 f3.text(6.6, 6, 'stellar component')   
-f3.text(7.3, 40, 'total = nebular + stellar')   
+f3.text(7.27, 37, 'total = nebular + stellar')   
 f3.text(6.8, 210, 'nebular component')   
-f3.text(7.65, 315, 'IMF exp')  
+f3.text(7.65, 320, 'IMF exp')  
 # adding the enhancement of the stellar component  
 f4 = figs.add_subplot(212)#, sharex=f3)
 #f4.set_xlim(lower, upper) 
 f4.set_xlim(6.5, 7.3)
 f4.set_ylim(-8, -1.0)
 f4.text(6.67, -1.7, 'stellar component')   
+f4.text(7.1, -2.7, 'IMF exp = 0.5')   
+f4.text(7.0, -4.3, 'IMF exp = 1.7', rotation=-17)   
+f4.text(6.9, -5.3, 'IMF exp = 2.3', rotation=-27)   
+f4.text(6.8, -5.5, 'IMF exp = 2.6', rotation=-35)   
 # remove the first tick so that they do not overlap
 pyplot.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
 
@@ -293,14 +352,14 @@ for i in range(0, len(constant_tot)):
     curve.set_linestyle('--')
 
 leg1 = pyplot.figure(1).legend(curves_inst, IMFs, bbox_to_anchor=(0.85, 0.85))  
-leg2 = pyplot.figure(2).legend(curves_cont, IMFs, bbox_to_anchor=(0.87, 0.87), labelspacing=0.2)
+leg2 = pyplot.figure(2).legend(curves_cont, IMFs, bbox_to_anchor=(0.87, 0.875), labelspacing=0.2)
 for t in leg1.get_texts():
     t.set_fontsize(12)     
 for t in leg2.get_texts():
     t.set_fontsize(12)     
-pyplot.show()
+#pyplot.show()
 
-'''
+
 # Saving the plots
 pyplot.figure(1)
 epsfile = os.path.join(path_plots, "Inst_logAge_NEW4.eps")
@@ -310,7 +369,7 @@ pyplot.figure(2)
 epsfile = os.path.join(path_plots, "Const_logAge_NEW4.eps")
 pyplot.savefig(epsfile)
 pyplot.ion()
-'''
+
 
 print('Done!')
 
