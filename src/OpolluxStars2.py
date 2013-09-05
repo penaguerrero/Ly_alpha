@@ -3,10 +3,10 @@ import glob
 import os
 import string
 import table
-#from matplotlib import pyplot
-#from pylab import *
-from spectrum import spectrum
-#from matplotlib.ticker import MaxNLocator
+from matplotlib import pyplot
+from pylab import *
+from science import spectrum
+from matplotlib.ticker import MaxNLocator
 
 
 '''
@@ -143,7 +143,7 @@ for i in range(0, len(seds)):
     temp_obj2 = string.split(temp_obj[1], sep='.')
     temp = temp_obj2[0].replace("s", "")
     temp2 = string.split(temp, sep='g')
-    print (temp2[0])  
+    print ('TEMPERATURE', temp2[0])  
     if (y1 / y2) > 2.0 or (numpy.fabs(y2) > numpy.fabs(y1)):        
         x1 = 1271.61 #1283.15
         x2 = 1298.58
@@ -205,7 +205,7 @@ for i in range(0, len(seds)):
         sII_list.append(sII)
     lyalpha_arr = numpy.array([lyalpha_arr_norm, y_Lyalpha])
     
-    ''' 
+    '''
     # Fitted plots 
     pyplot.figure(2, figsize=(10, 10))
     pyplot.title('My continuum fit')
@@ -214,14 +214,14 @@ for i in range(0, len(seds)):
     pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
     pyplot.xlim(1190, 1300)
     pyplot.plot(data_rebinned[0], data_rebinned[1], 'b', lyalpha_arr_wav, data_rebinned[1], 'r--', my_cont_arr[0], my_cont_arr[1], 'g')
+    pyplot.show()
     '''
-
     low = 1160
     up = 1260
     lo_y = -0.05
     up_y = upy
 
-    '''
+    
     # making all fonts biger
     font = {#'family' : 'Vera Sans',
             'weight' : 'regular',
@@ -230,7 +230,7 @@ for i in range(0, len(seds)):
     
     pyplot.figure(3, figsize=(10, 10))
     #pyplot.title('My continuum fit')
-    #pyplot.suptitle(aka)
+    pyplot.suptitle(Teff)
     xlab = pyplot.xlabel('Wavelength [$\AA$]')
     ylab = pyplot.ylabel('Normalized Flux')# [ergs/s/cm$^2$/$\AA$]')
     # add some space between labels and axis
@@ -253,7 +253,7 @@ for i in range(0, len(seds)):
     #epsfile = os.path.join(path_plots, aka+".eps")
     #pyplot.savefig(epsfile)
     pyplot.show()    
-    
+    '''
     print("Do you want to save this plot?  [y/N , meaning NO is default... :P ]")
     save_plt = raw_input()
     pyplot.ioff()
@@ -275,7 +275,7 @@ for i in range(0, len(seds)):
     star_counter = star_counter + 1
 
 #a.close()
-
+'''
 Oeqws_file = open(path_results+'Ostar_eqws2.txt', 'w+')
 table_Ostars = []
 print >> Oeqws_file, 'SIGN CONVENTION: positive = emission,  negative = absorption'
@@ -287,6 +287,6 @@ for i in range(0, len(EQWs)):
     
 table.pprint_table(Oeqws_file, table_Ostars)
 Oeqws_file.close()
-
+'''
 
     
