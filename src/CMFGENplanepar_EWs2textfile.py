@@ -26,27 +26,32 @@ make_text_files = False
 all_stars = True
 
 # if all_stars is False this list will be used
-stars_list = ['T16000logg300_OBSFLUX_1d_Acgs.txt', 'T22000logg375_OBSFLUX_1d_Acgs.txt', 'T25000logg375_OBSFLUX_1d_Acgs.txt']
+stars_list = ['T16000logg325_obs_fin_10_1d_Acgs.txt', 'T16000logg325_obs_cont_1d_Acgs.txt',
+              'T22000logg325_obs_fin_10_1d_Acgs.txt', 'T22000logg325_obs_cont_1d_Acgs.txt',
+              'T25000logg375_obs_fin_10_1d_Acgs.txt', 'T25000logg375_obs_cont_1d_Acgs.txt']
 
 # determine the average resolving power for the entire spectrum, 90-10,500 Angstroms
 determine_avgR = False      
 
-# To test the linear continuum fitting comparing the one obtained before rebinning versus after rebinning
-compare_to_find_continuum_then_rebin = False
-
 # These are the plots of either all stars or just the selected ones
-want_to_see_plots = True
+want_to_see_plots = False
 
 # Create the text file with the temperature, log g values, and equivalent widths.
 # There are 2 EW measuremets: simple-EW = full integration set to 40A, and half-EW = integration from LyAlpha+20A * 2
-create_textfile_of_EWs = True
+create_textfile_of_EWs = False
+
+# Compare my continuum function to the "real" continuum
+compare2_real_continuum = True
+
+# To test the linear continuum fitting comparing the one obtained before rebinning versus after rebinning
+compare_to_find_continuum_then_rebin = False
 
 ##################################################################################################################################
   
 #    NOW DO THE WORK
 
 # This is where the directory is
-path_CMFGEN = '/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/plane_par_mod_26apr11/'
+path_CMFGEN = '/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/plane_par_mod_26apr11/bgrid/'
 path_results = '/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/results/CMFGENplane_par/'
 dataCMFGEN = science.utility.DataDir(path_CMFGEN)
 data_results = science.utility.DataDir(path_results)
@@ -68,10 +73,12 @@ ogrid_dir = dataCMFGEN.contents()
 templogg_list = []
 
 for i in range(0, len(ogrid_dir)):
-    temp_basename = string.split(os.path.basename(ogrid_dir[i]), sep='T')
-    # equivalently, I could write the following for python 3
-    #thebase = os.path.basename(ogrid_dir[i]).split('T')
-    templogg_list.append(temp_basename[1])
+    if 'T' in ogrid_dir[i]:
+        temp_basename = string.split(os.path.basename(ogrid_dir[i]), sep='T')
+        #print temp_basename
+        # equivalently, I could write the following for python 3
+        #thebase = os.path.basename(ogrid_dir[i]).split('T')
+        templogg_list.append(temp_basename[1])
 
 '''
  THIS LOOP IS TO BE RUNNED WHEN NEEDING TO CONVERT CMFGEN FILES INTO 2 COLUMN FILES OF ANGSTROMS AND CGS UNITS. 
@@ -83,12 +90,13 @@ if make_text_files == True:
         new_path_CMFGEN = path_CMFGEN+'T'+templogg_list[i]
         print(new_path_CMFGEN)
         science.CMFGEN.into2cols(new_path_CMFGEN, path_results, lower_wave, upper_wave, templogg_list[i])
-
+        #raw_input('made it into making the txt files')
 
 # Generate the lists of the fin and cont files
 temps = []
 loggs = []
 fin_files = []
+cont_files = []
 converted = '_Acgs.txt'
 
 # Choose if you want to do all stars or list the ones you want
@@ -100,19 +108,20 @@ else:
 # there might be other files in the results directory, so search for the right files to measure EWs
 for item in stars:
     if converted in item:
-        fin_files.append(item)        
-        kk1 = string.split(item, sep='_')
-        kk2 = kk1[0].replace("T", "")
-        kk3 = string.split(kk2, sep='logg')
-        teff = int(kk3[0])
-        logg = float(kk3[1])*0.01
-        temps.append(teff)
-        loggs.append(logg)
+        if '_fin_10' in item:
+            fin_files.append(item)        
+            kk1 = string.split(item, sep='_')
+            kk2 = kk1[0].replace("T", "")
+            kk3 = string.split(kk2, sep='logg')
+            teff = int(kk3[0])
+            logg = float(kk3[1])*0.01
+            #print float(kk3[1])*0.01, teff, logg
+            temps.append(teff)
+            loggs.append(logg)
+        elif '_cont_' in item:
+            cont_files.append(item)
+#print 'len(fin_files), len(cont_files):', len(fin_files), len(cont_files)
         
-# And now create the continuums
-cont_files = []
-points_used_for_line_continuums = []
-
 # List to store the EWs
 simple_eqw_list = []
 half_eqw_list = []
@@ -120,7 +129,9 @@ half_eqw_list = []
 # Load the text files
 for i in range(len(fin_files)):
     A, cgs = numpy.loadtxt(os.path.join(data_results.path,fin_files[i]), dtype=numpy.float64, unpack=True)
-    print('Fin file loaded. Here is the temperature and log g:  %i  %0.2f' % (temps[i], loggs[i]))
+    A_cont, cgs_cont = numpy.loadtxt(os.path.join(data_results.path,cont_files[i]), dtype=numpy.float64, unpack=True)
+    print('Fin and cont files loaded. Here is the temperature and log g:  %i  %0.2f' % (temps[i], loggs[i]))
+    #print 'A.shape, A_cont.shape', A.shape, A_cont.shape
     # Determine the average resolving Power of the whole spectrum
     # CAUTION: this takes a few minutes, skip this loop if wanting faster run time,
     # make     determine_avgR = False
@@ -133,53 +144,44 @@ for i in range(len(fin_files)):
         avgR = int(sum(R_list)) / len(A)
         print('Average Resolving power = %i' % avgR)
     
+    #print 'about to select the data'
     # Selecting the range for Ly_alpha
     wav, flx = science.spectrum.selection(A, cgs, lower_wave, upper_wave)
     selected_data = numpy.array([wav, flx])
+    print 'got the selected lines data', selected_data.shape
+    wav_cont, flx_cont = science.spectrum.selection(A_cont, cgs_cont, lower_wave, upper_wave)
+    selected_data_cont = numpy.array([wav_cont, flx_cont])
+    print 'got the selected continuum data', selected_data_cont.shape
     
     # Determine resolving power at LyAlpha and delta_lambda
     R_lyalpha = science.spectrum.resolving_power(Lyalpha, selected_data)
     original_delta_lambda = Lyalpha / float(R_lyalpha)
-    #print('Initial Resolving Power = %i  ---  Initial delta_lambda = %f' % (R_lyalpha, original_delta_lambda))
+    print('LINES -- Initial Resolving Power at LyAlpha = %i    Initial delta_lambda = %f' % (R_lyalpha, original_delta_lambda))
+    R_lyalpha_cont = science.spectrum.resolving_power(Lyalpha, selected_data_cont)
+    original_delta_lambda_cont = Lyalpha / float(R_lyalpha)
+    print('CONTINUUM -- Initial Resolving Power at LyAlpha = %i    Initial delta_lambda = %f' % (R_lyalpha_cont, original_delta_lambda_cont))
     
     # Rebin to desired delta_lambda and calculate the local continuum as a linear approximation
     '''delta_lambda=0.456 is an average between the typical real observed dlta_lambdas of STIS (0.75) and COS (0.18)'''
     desired_delta_lambda = 0.465
     
     # Rebin the data array and then calculate a continuum
-    rebinned_selec_data, smoothing_R_factor = science.spectrum.rebin_one_arr_to_desired_resolution(desired_delta_lambda, Lyalpha, selected_data, guessed_rows=500)
+    rebinned_selec_data, smoothing_R_factor = science.spectrum.rebin_one_arr_to_desired_resolution(desired_delta_lambda, Lyalpha, selected_data, guessed_rows=700)
     #print ('smoothing_R_factor = %f' % smoothing_R_factor)
-    continuum_reb_selec_data = science.CMFGEN.find_linear_continuum(rebinned_selec_data, temps[i])        
+    # Make the continuum array the same shape as the lines data
+    fin_rows = len(rebinned_selec_data[0])
+    continuum_reb_selec_data, smoothing_R_factor_cont = science.spectrum.rebin_one_arr_to_desired_rows(selected_data_cont, fin_rows)        
     # plot limits
     low = 1160
     up = 1260
     pyplot.figure(1, figsize=(10, 7))
-    
-    '''
-    If wanting to comare the difference between determining the continuum before of after the rebinning turm
-    compare_to_find_continuum_then_rebin to TRUE.
-    '''
-    if compare_to_find_continuum_then_rebin == True:
-        # This is to calculate the continuum before rebinning and then rebin data and continuum
-        continuum_selected_data2 = science.CMFGEN.find_linear_continuum(selected_data, temps[i])    
-        rebinned_selec_data2, rebinned_continuum_data = science.spectrum.rebin_arrays_for_desired_resolution(desired_delta_lambda, Lyalpha, selected_data, continuum_selected_data2)
-        # Plot everything to compare
-        pyplot.title('Raw and Rebinned data')
-        pyplot.suptitle(temps[i])
-        pyplot.xlabel('Wavelength [$\AA$]')
-        pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
-        pyplot.xlim(low, up)
-        pyplot.plot(selected_data[0], selected_data[1], 'b',    # the raw selected data
-                    continuum_selected_data2[0], continuum_selected_data2[1], 'm:', # the continuum determined from the raw selected data
-                    rebinned_selec_data[0], rebinned_selec_data[1], 'k',    # the rebinned selected data
-                    continuum_reb_selec_data[0], continuum_reb_selec_data[1], 'r--',  # the continuum determined from the rebinned selected data
-                    rebinned_continuum_data[0], rebinned_continuum_data[1], 'g:') # the rebinned coninuum determined from the raw selected data
-        pyplot.show()
-    
+        
     # Divide by the continuum 
+    #print 'rebinned_selec_data.shape, continuum_reb_selec_data.shape', rebinned_selec_data.shape, continuum_reb_selec_data.shape
     norm_rebinned_flx = rebinned_selec_data[1] / continuum_reb_selec_data[1]
     norm_data = numpy.array([rebinned_selec_data[0], norm_rebinned_flx])
-    # determine theoretical continuum
+    #print 'norm_data.shape', norm_data.shape
+    # determine theoretical continuum for the EW measurements
     continuum_theo = science.spectrum.theo_cont(norm_data[0], scale_factor=1.0)
     
     '''To see plots turn want_to_see_plots to TRUE'''
@@ -191,6 +193,7 @@ for i in range(len(fin_files)):
         pyplot.ylabel('Normalized Flux')
         pyplot.xlim(low, up)
         pyplot.plot(norm_data[0], norm_data[1], 'k')
+        pyplot.hlines(1.0, low, up, colors='r', linestyles='dotted')
         pyplot.show()
     
     # Determine EWs
@@ -212,5 +215,78 @@ if create_textfile_of_EWs == True:
         f.write(s)
     f.close()
 
+if compare2_real_continuum == True:
+    avg_abs_err_to_real_continuum_all = []
+    avg_relative_err_to_real_continuum_all = []
+    all_chi_squared = []
+    continuum_reb_selec_real = continuum_reb_selec_data
+    continuum_reb_selec_mine = science.CMFGEN.find_linear_continuum(rebinned_selec_data, temps[i])
+
+    # ERRORS
+    mean = sum(continuum_reb_selec_mine[1]) / len(continuum_reb_selec_mine[1])
+    var_list = []
+    for i in range(0, len(continuum_reb_selec_mine[1])):
+        var = (continuum_reb_selec_mine[1,i] - mean)**2
+        var_list.append(var)
+    variance =  sum(var_list) / len(continuum_reb_selec_mine[1])
+    chi2 = []
+    for i in range(0, len(continuum_reb_selec_mine[1])):
+        diff_squared = ((continuum_reb_selec_mine[1, i] - continuum_reb_selec_real[1, i])**2)
+        chi2.append(diff_squared) 
+    chi_squared = sum(chi2) / variance
+    all_chi_squared.append(chi_squared)
+    
+    # Difference of my continuum from the real continuum
+    relative_err_to_real_continuum_list = []
+    abs_err_to_real_continuum_list = []
+    for i in range(0, len(continuum_reb_selec_mine[0])):
+        relative_err_to_real_continuum = ((continuum_reb_selec_mine[1,i] / continuum_reb_selec_real[1,i]) - 1.0) * 100
+        relative_err_to_real_continuum_list.append(relative_err_to_real_continuum)
+        abs_err_to_real_continuum = continuum_reb_selec_mine[1,i] - continuum_reb_selec_real[1,i]
+        abs_err_to_real_continuum_list.append(abs_err_to_real_continuum)
+    # Calculate the average error to the real continuum   
+    avg_relative_err_to_real_continuum = sum(relative_err_to_real_continuum_list) / len(relative_err_to_real_continuum_list)
+    avg_abs_err_to_real_continuum = sum(abs_err_to_real_continuum_list) / len(abs_err_to_real_continuum_list)
+    # Append the average errors of this file to the list for all the objects
+    avg_abs_err_to_real_continuum_all.append(avg_abs_err_to_real_continuum)
+    avg_relative_err_to_real_continuum_all.append(avg_relative_err_to_real_continuum)
+    print('Average Relative error of my line to the continuum: %f' % (avg_relative_err_to_real_continuum))
+    print('Chi-squared of my fit = %f' % chi_squared)
+    # Find EWs with my continuum fit
+    myContinuum_half_eqw_list = []
+    myContinuum_half_eqw = science.spectrum.half_EQW_times2(selected_data, continuum_reb_selec_mine, Lyalpha, eqw_limit)
+    print('Ly-alpha half-EQW = %f' % half_eqw)
+    myContinuum_half_eqw_list.append(myContinuum_half_eqw)
+    f = open(path_results+'planepar_comparison2myContinuum_and_EWs.txt', 'w+')
+    print >> f, 'SIGN CONVENTION:   positive = emission   negative = absorption'
+    print >> f, 'Temperature    log g    avg_abs_err_to_real_continuum    avg_relative_err_to_real_continuum_all    real_HalfEW    EW_myContinuum    all_chi_squared'
+    for i in range(0, len(temps)):
+        print >> f,  ''
+        s = ('%i    %0.2f    %0.3f    %0.3f    %0.3f    %0.3f    %0.3f\n' % 
+             (temps[i], loggs[i], avg_abs_err_to_real_continuum[i], avg_relative_err_to_real_continuum_all[i], half_eqw_list[i], myContinuum_half_eqw_list[i], all_chi_squared[i]))
+        f.write(s)
+    f.close()
+    
+    '''
+    If wanting to compare the difference between determining the continuum before of after the rebinning turn
+    compare_to_find_continuum_then_rebin to TRUE.
+    '''
+    if compare_to_find_continuum_then_rebin == True:
+        # This is to calculate the continuum before rebinning and then rebin data and continuum
+        continuum_selected_data2 = science.CMFGEN.find_linear_continuum(selected_data, temps[i])    
+        rebinned_selec_data2, rebinned_continuum_data = science.spectrum.rebin_arrays_for_desired_resolution(desired_delta_lambda, Lyalpha, selected_data, continuum_selected_data2)
+        # Plot everything to compare
+        pyplot.title('Raw and Rebinned data')
+        pyplot.suptitle(temps[i])
+        pyplot.xlabel('Wavelength [$\AA$]')
+        pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
+        pyplot.xlim(low, up)
+        pyplot.plot(selected_data[0], selected_data[1], 'b',    # the raw selected data
+                    continuum_selected_data2[0], continuum_selected_data2[1], 'm:', # the continuum determined from the raw selected data
+                    rebinned_selec_data[0], rebinned_selec_data[1], 'k',    # the rebinned selected data
+                    continuum_reb_selec_data[0], continuum_reb_selec_data[1], 'r--',  # the continuum determined from the rebinned selected data
+                    rebinned_continuum_data[0], rebinned_continuum_data[1], 'g:') # the rebinned coninuum determined from the raw selected data
+        pyplot.show()
+    
 print 'Done!'
 
