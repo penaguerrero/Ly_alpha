@@ -13,7 +13,7 @@ from random import randrange
 This code takes the written eqws file with title "s99LyAeqw*+IMFs[i]+.txt" and uses it to make the plots for the paper.
 '''
 
-
+ 
 constant_ste = []
 constant_neb = []
 constant_tot = []
