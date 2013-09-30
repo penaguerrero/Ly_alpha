@@ -4,9 +4,9 @@ import re
 import os
 import string
 import table
-from spectrum import spectrum
-from spectrum import pyplot
-from claus.clausfile import clausfile
+from science import spectrum
+from matplotlib import pyplot
+from science.claus import clausfile
 
 
 '''
@@ -40,7 +40,7 @@ def CMFGENfile_into2cols(path_CMFGEN, path_results, lower_wave, upper_wave, temp
             file_name = os.path.basename(file_in_use)
             print('loading %s' % (file_in_use))
             # Converting file into three columns: frequencies, janskies, error
-            clausfile.clausfile(file_in_use, dest=os.path.join(path_results))
+            clausfile(file_in_use, dest=os.path.join(path_results))
             # Converting into Angstroms and cgs to create a text file 
             sp = spectrum.spectrum(os.path.join(path_results+os.path.basename(file_in_use)+"_1d"))
             #sp.save2(file_in_use+"_Acgs.txt")
@@ -48,10 +48,13 @@ def CMFGENfile_into2cols(path_CMFGEN, path_results, lower_wave, upper_wave, temp
             spectrum.write_1d(os.path.join(os.path.abspath(path_results), file_name+"_Acgs_"+templogg+".txt"), output)
       
   
-#### NOW DO THE WORK
+####### NOW DO THE WORK
 # This is where the directory is
-path_CMFGEN = '../ogrid_24jun09/'
-path_results = '../results/OstarsCMFGEN/'
+####path_CMFGEN = '../ogrid_24jun09/'
+####path_results = '../results/OstarsCMFGEN/'
+machine = 'pena'
+path_CMFGEN = '/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/plane_par_mod_26apr11/bgrid/'
+path_results = '/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/results/CMFGENplane_par/'
 if not os.path.exists(path_results):
     print("Path: %s does not exist!" % (path_results))
     exit(1)
@@ -99,9 +102,12 @@ loggs = []
 # Generate the lists of the fin and cont files
 fin_files = []
 cont_files = []
-fins = 'fin_10.fixed_Acgs'
-conts = 'cont.fixed_Acgs'
-results_dir = glob.glob('../results/OstarsCMFGEN/*')
+####fins = 'fin_10.fixed_Acgs'
+####conts = 'cont.fixed_Acgs'
+fins = 'obs_fin_10'
+conts = 'obs_cont'
+####results_dir = glob.glob('../results/OstarsCMFGEN/*')
+results_dir = glob.glob('/Users/pena/Documents/AptanaStudio3/Ly_alpha/results/CMFGENplane_par/*')
 for i in range(0, len(results_dir)):
     if fins in results_dir[i]:
         fin_files.append(results_dir[i])
@@ -245,14 +251,25 @@ for f in range(0, len(fin_files)):
     '''
     # My continuum function, two-point linear equation: y = m*(x -x1) + y1 
     #print('Enter the lower and upper X-axis to consider in the line:')
-    x1 = 1274.63 #float(raw_input("Low limit: "))
-    x2 = 1290.42 #float(raw_input("Upper limit: "))
+    x1 = 1235.8#1244 #1274.63 #float(raw_input("Low limit: "))
+    x2 = 1283.6 #1290.42 #float(raw_input("Upper limit: "))
     temp_x1, _ = spectrum.find_nearest(lines_rebinned[0], x1)
     temp_x2, _ = spectrum.find_nearest(lines_rebinned[0], x2)
     #print('closest wavelengths: %f, %f' % (temp_x1, temp_x2))
     y1 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x1)
     y2 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x2)
+    
     temp_obj = string.split(base_fin, sep='_')
+    ####
+    temp_obj1 = string.split(temp_obj[0], sep='logg')
+    temp_obj2 = temp_obj1[0].replace("T", "")
+    temps.append(int(temp_obj2))
+    logg_obj_temporary1 = temp_obj1[1]
+    logg_obj = float(logg_obj_temporary1) * 0.01
+    loggs.append(logg_obj)
+    print '####################### temp_obj2, logg_obj', temp_obj2, logg_obj
+    '''
+    ####
     temps.append(int(temp_obj[4]))
     logg_obj_temporary1 = string.split(temp_obj[5], sep='.')
     logg_obj_temporary2 = logg_obj_temporary1[0].replace("logg", "") 
@@ -260,13 +277,17 @@ for f in range(0, len(fin_files)):
     loggs.append(logg_obj)
     print ('Teff = %i  logg = %f' % (int(temp_obj[4]), logg_obj))
     if (numpy.fabs(y2) > numpy.fabs(y1)) or (float(temp_obj[4]) > 35000.0) and (float(temp_obj[4]) < 48000.0):
+    '''
+    if (numpy.fabs(y2) > numpy.fabs(y1)) or (float(temp_obj2) > 35000.0) and (float(temp_obj2) < 48000.0):
         x1 = 1221.76
         x2 = 1298.58
         temp_x1, _ = spectrum.find_nearest(lines_rebinned[0], x1)
         temp_x2, _ = spectrum.find_nearest(lines_rebinned[0], x2)
         y1 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x1)
         y2 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x2)
-    if (float(temp_obj[4]) > 48000.0):
+        
+    ####if (float(temp_obj[4]) > 48000.0):
+    if (float(temp_obj2) > 48000.0):
         x1 = 1202.95
         x2 = 1298.58
         temp_x1, _ = spectrum.find_nearest(lines_rebinned[0], x1)
@@ -293,8 +314,8 @@ for f in range(0, len(fin_files)):
         ty = tm * (x - tx1) + ty1
         ty_list.append(ty)
     tmy_cont_arr = numpy.array([lines_rebinned[0], ty_list])
-    
-    '''        
+        
+
     pyplot.figure(3, figsize=(10, 10))
     pyplot.title('AKA Ostar_'+repr(aka))
     pyplot.suptitle('My continuum fit to: '+base_fin+' and: '+base_cont)
@@ -305,7 +326,7 @@ for f in range(0, len(fin_files)):
     pyplot.plot(lines_rebinned[0], lines_rebinned[1], 'b', lyalpha_arr_reb, lines_rebinned[1], 'r--', 
                 cont_rebinned[0], cont_rebinned[1], 'g', my_cont_arr[0], my_cont_arr[1], 'magenta',
                 tmy_cont_arr[0], tmy_cont_arr[1], 'cyan')
-    '''
+    
     
     # Normalization to my continuum: line from array
     new_norm_flx = lines_rebinned[1] / my_cont_arr[1]
@@ -322,6 +343,7 @@ for f in range(0, len(fin_files)):
         var = (my_cont_arr[1,i] - mean)**2
         var_list.append(var)
     variance =  sum(var_list) / len(my_cont_arr[1])
+    print 'variance', variance
     chi2 = []
     for i in range(0, len(my_cont_arr[1])):
         diff_squared = ((my_cont_arr[1, i] - cont_rebinned[1, i])**2)
@@ -332,7 +354,8 @@ for f in range(0, len(fin_files)):
     relative_err_to_real_continuum_list = []
     abs_err_to_real_continuum_list = []
     for i in range(0, len(my_cont_arr[0])):
-        relative_err_to_real_continuum = ((my_cont_arr[1,i] / cont_rebinned[1,i]) - 1.0) * 100
+        relative_err_to_real_continuum = ((numpy.fabs(my_cont_arr[1,i]) / numpy.fabs(cont_rebinned[1,i])) - 1.0) * 100
+        #relative_err_to_real_continuum = ((numpy.fabs(my_cont_arr[1,i]) - numpy.fabs(cont_rebinned[1,i])) / numpy.fabs(cont_rebinned[1,i])) * 100
         relative_err_to_real_continuum_list.append(relative_err_to_real_continuum)
         abs_err_to_real_continuum = my_cont_arr[1,i] - cont_rebinned[1,i]
         abs_err_to_real_continuum_list.append(abs_err_to_real_continuum)
@@ -373,7 +396,7 @@ for f in range(0, len(fin_files)):
     
     #print('Average Absolute error of my normalization to the real one: %f' % (avg_abs_err_to_real_continuum))
     #print('Average Absolute error of the other normalization to the real one: %f' % (tavg_abs_err_to_real_continuum))
-    print('Average Relative error of my line to the continuum: %f' % (avg_relative_err_to_real_continuum))
+    print('Average Relative error of my line to the continuum: %f percent' % (avg_relative_err_to_real_continuum))
     #print('Average Relative error of made-up line to the continuum: %f' % (tavg_relative_err_to_real_continuum))
     print('Chi-squared of my fit = %f' % chi_squared)
     all_chi_squared1.append(chi_squared)
