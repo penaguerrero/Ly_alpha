@@ -50,11 +50,11 @@ def CMFGENfile_into2cols(path_CMFGEN, path_results, lower_wave, upper_wave, temp
   
 ####### NOW DO THE WORK
 # This is where the directory is
-####path_CMFGEN = '../ogrid_24jun09/'
-####path_results = '../results/OstarsCMFGEN/'
+path_CMFGEN = '../ogrid_24jun09/'
+path_results = '../results/OstarsCMFGEN/'
 machine = 'pena'
-path_CMFGEN = '/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/plane_par_mod_26apr11/bgrid/'
-path_results = '/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/results/CMFGENplane_par/'
+#path_CMFGEN = '/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/plane_par_mod_26apr11/bgrid/'
+#path_results = '/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/results/CMFGENplane_par/'
 if not os.path.exists(path_results):
     print("Path: %s does not exist!" % (path_results))
     exit(1)
@@ -102,12 +102,12 @@ loggs = []
 # Generate the lists of the fin and cont files
 fin_files = []
 cont_files = []
-####fins = 'fin_10.fixed_Acgs'
-####conts = 'cont.fixed_Acgs'
-fins = 'obs_fin_10'
-conts = 'obs_cont'
-####results_dir = glob.glob('../results/OstarsCMFGEN/*')
-results_dir = glob.glob('/Users/pena/Documents/AptanaStudio3/Ly_alpha/results/CMFGENplane_par/*')
+fins = 'fin_10.fixed_Acgs'
+conts = 'cont.fixed_Acgs'
+#fins = 'obs_fin_10'
+#conts = 'obs_cont'
+results_dir = glob.glob('../results/OstarsCMFGEN/*')
+#results_dir = glob.glob('/Users/'+machine+'/Documents/AptanaStudio3/Ly_alpha/results/CMFGENplane_par/*')
 for i in range(0, len(results_dir)):
     if fins in results_dir[i]:
         fin_files.append(results_dir[i])
@@ -251,15 +251,19 @@ for f in range(0, len(fin_files)):
     '''
     # My continuum function, two-point linear equation: y = m*(x -x1) + y1 
     #print('Enter the lower and upper X-axis to consider in the line:')
-    x1 = 1235.8#1244 #1274.63 #float(raw_input("Low limit: "))
-    x2 = 1283.6 #1290.42 #float(raw_input("Upper limit: "))
+    x1 = 1274#1244 #1274.63 #float(raw_input("Low limit: "))
+    x2 = 1290#1283.6 #1290.42 #float(raw_input("Upper limit: "))
     temp_x1, _ = spectrum.find_nearest(lines_rebinned[0], x1)
     temp_x2, _ = spectrum.find_nearest(lines_rebinned[0], x2)
     #print('closest wavelengths: %f, %f' % (temp_x1, temp_x2))
-    y1 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x1)
-    y2 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x2)
+    y1_temp = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x1)
+    y2_temp = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x2)
+    percentage = 0.027
+    y1 = y1_temp + y1_temp*percentage
+    y2 = y2_temp + y2_temp*percentage
     
     temp_obj = string.split(base_fin, sep='_')
+    '''
     ####
     temp_obj1 = string.split(temp_obj[0], sep='logg')
     temp_obj2 = temp_obj1[0].replace("T", "")
@@ -277,8 +281,7 @@ for f in range(0, len(fin_files)):
     loggs.append(logg_obj)
     print ('Teff = %i  logg = %f' % (int(temp_obj[4]), logg_obj))
     if (numpy.fabs(y2) > numpy.fabs(y1)) or (float(temp_obj[4]) > 35000.0) and (float(temp_obj[4]) < 48000.0):
-    '''
-    if (numpy.fabs(y2) > numpy.fabs(y1)) or (float(temp_obj2) > 35000.0) and (float(temp_obj2) < 48000.0):
+        #if (numpy.fabs(y2) > numpy.fabs(y1)) or (float(temp_obj2) > 35000.0) and (float(temp_obj2) < 48000.0):
         x1 = 1221.76
         x2 = 1298.58
         temp_x1, _ = spectrum.find_nearest(lines_rebinned[0], x1)
@@ -286,8 +289,8 @@ for f in range(0, len(fin_files)):
         y1 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x1)
         y2 = spectrum.findXinY(lines_rebinned[1], lines_rebinned[0], temp_x2)
         
-    ####if (float(temp_obj[4]) > 48000.0):
-    if (float(temp_obj2) > 48000.0):
+    if (float(temp_obj[4]) > 48000.0):
+        #if (float(temp_obj2) > 48000.0):
         x1 = 1202.95
         x2 = 1298.58
         temp_x1, _ = spectrum.find_nearest(lines_rebinned[0], x1)
