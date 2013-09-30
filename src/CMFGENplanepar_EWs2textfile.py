@@ -126,6 +126,10 @@ for item in stars:
 simple_eqw_list = []
 half_eqw_list = []
 
+# for chi squared determination
+lines_reb_selec_real_list = []
+continuum_reb_selec_real_list = []
+
 # Load the text files
 for i in range(len(fin_files)):
     A, cgs = numpy.loadtxt(os.path.join(data_results.path,fin_files[i]), dtype=numpy.float64, unpack=True)
@@ -160,7 +164,7 @@ for i in range(len(fin_files)):
     R_lyalpha_cont = science.spectrum.resolving_power(Lyalpha, selected_data_cont)
     original_delta_lambda_cont = Lyalpha / float(R_lyalpha)
     print('CONTINUUM -- Initial Resolving Power at LyAlpha = %i    Initial delta_lambda = %f' % (R_lyalpha_cont, original_delta_lambda_cont))
-    
+      
     # Rebin to desired delta_lambda and calculate the local continuum as a linear approximation
     '''delta_lambda=0.456 is an average between the typical real observed dlta_lambdas of STIS (0.75) and COS (0.18)'''
     desired_delta_lambda = 0.465
@@ -171,6 +175,10 @@ for i in range(len(fin_files)):
     # Make the continuum array the same shape as the lines data
     fin_rows = len(rebinned_selec_data[0])
     continuum_reb_selec_data, smoothing_R_factor_cont = science.spectrum.rebin_one_arr_to_desired_rows(selected_data_cont, fin_rows)        
+    # for chi sqared determination
+    lines_reb_selec_real_list.append(rebinned_selec_data)
+    continuum_reb_selec_real_list.append(continuum_reb_selec_data)
+    
     # plot limits
     low = 1160
     up = 1260
@@ -219,51 +227,85 @@ if compare2_real_continuum == True:
     avg_abs_err_to_real_continuum_all = []
     avg_relative_err_to_real_continuum_all = []
     all_chi_squared = []
-    continuum_reb_selec_real = continuum_reb_selec_data
-    continuum_reb_selec_mine = science.CMFGEN.find_linear_continuum(rebinned_selec_data, temps[i])
-
-    # ERRORS
-    mean = sum(continuum_reb_selec_mine[1]) / len(continuum_reb_selec_mine[1])
-    var_list = []
-    for i in range(0, len(continuum_reb_selec_mine[1])):
-        var = (continuum_reb_selec_mine[1,i] - mean)**2
-        var_list.append(var)
-    variance =  sum(var_list) / len(continuum_reb_selec_mine[1])
-    chi2 = []
-    for i in range(0, len(continuum_reb_selec_mine[1])):
-        diff_squared = ((continuum_reb_selec_mine[1, i] - continuum_reb_selec_real[1, i])**2)
-        chi2.append(diff_squared) 
-    chi_squared = sum(chi2) / variance
-    all_chi_squared.append(chi_squared)
+    continuum_reb_selec_mine_list = []
     
-    # Difference of my continuum from the real continuum
-    relative_err_to_real_continuum_list = []
-    abs_err_to_real_continuum_list = []
-    for i in range(0, len(continuum_reb_selec_mine[0])):
-        relative_err_to_real_continuum = ((continuum_reb_selec_mine[1,i] / continuum_reb_selec_real[1,i]) - 1.0) * 100
-        relative_err_to_real_continuum_list.append(relative_err_to_real_continuum)
-        abs_err_to_real_continuum = continuum_reb_selec_mine[1,i] - continuum_reb_selec_real[1,i]
-        abs_err_to_real_continuum_list.append(abs_err_to_real_continuum)
-    # Calculate the average error to the real continuum   
-    avg_relative_err_to_real_continuum = sum(relative_err_to_real_continuum_list) / len(relative_err_to_real_continuum_list)
-    avg_abs_err_to_real_continuum = sum(abs_err_to_real_continuum_list) / len(abs_err_to_real_continuum_list)
-    # Append the average errors of this file to the list for all the objects
-    avg_abs_err_to_real_continuum_all.append(avg_abs_err_to_real_continuum)
-    avg_relative_err_to_real_continuum_all.append(avg_relative_err_to_real_continuum)
-    print('Average Relative error of my line to the continuum: %f' % (avg_relative_err_to_real_continuum))
-    print('Chi-squared of my fit = %f' % chi_squared)
-    # Find EWs with my continuum fit
-    myContinuum_half_eqw_list = []
-    myContinuum_half_eqw = science.spectrum.half_EQW_times2(selected_data, continuum_reb_selec_mine, Lyalpha, eqw_limit)
-    print('Ly-alpha half-EQW = %f' % half_eqw)
-    myContinuum_half_eqw_list.append(myContinuum_half_eqw)
+    # determine my continuum for each real continuum
+    for i in range(len(continuum_reb_selec_real_list)):
+        continuum_reb_selec_real = continuum_reb_selec_real_list[i]
+        continuum_my_fit = science.CMFGEN.find_linear_continuum(rebinned_selec_data, temps[i])
+        rows = len(continuum_reb_selec_real[0])
+        continuum_reb_selec_mine, _ = science.spectrum.rebin_one_arr_to_desired_rows(continuum_my_fit, rows)
+        #print 'continuum_reb_selec_real.shape, continuum_reb_selec_mine.shape', continuum_reb_selec_real.shape, continuum_reb_selec_mine.shape
+
+        # plotting to compare the continuums
+        pyplot.title('Comparison of my continuum vs real')
+        pyplot.suptitle(temps[i])
+        pyplot.xlabel('Wavelength [$\AA$]')
+        pyplot.ylabel('Flux [ergs/s/cm$^2$/$\AA$]')
+        pyplot.xlim(low, up)
+        pyplot.plot(lines_reb_selec_real_list[0][i], lines_reb_selec_real_list[1][i], 'k',    # the raw selected data
+                    continuum_reb_selec_real_list[0][i], continuum_reb_selec_real_list[1][i], 'b', # real continuum
+                    continuum_reb_selec_mine[0], continuum_reb_selec_mine[1], 'm--')  # the continuum determined from the rebinned selected data
+        pyplot.show()        
+
+        # ERRORS
+        mean = sum(continuum_reb_selec_mine[1]) / len(continuum_reb_selec_mine[1])
+        print 'mean = ', mean
+        var_list = []
+        for i in range(len(continuum_reb_selec_mine[1])):
+            var = (continuum_reb_selec_mine[1][i] - mean)**2
+            var_list.append(var)
+        variance =  sum(var_list) / len(continuum_reb_selec_mine[1])
+        print 'variance', variance
+        chi2 = []
+        for i in range(len(continuum_reb_selec_mine[1])):
+            diff_squared = ((continuum_reb_selec_mine[1][i] - continuum_reb_selec_real[1][i])**2)
+            chi2.append(diff_squared) 
+        chi_squared = sum(chi2) / variance
+        print 'chi_squared', chi_squared
+        all_chi_squared.append(chi_squared)
+        raw_input()
+        
+        # Difference of my continuum from the real continuum
+        relative_err_to_real_continuum_list = []
+        abs_err_to_real_continuum_list = []
+        for i in range(len(continuum_reb_selec_mine[0])):
+            relative_err_to_real_continuum = ((continuum_reb_selec_mine[1][i] / continuum_reb_selec_real[1][i]) - 1.0) * 100
+            relative_err_to_real_continuum_list.append(relative_err_to_real_continuum)
+            abs_err_to_real_continuum = continuum_reb_selec_mine[1][i] - continuum_reb_selec_real[1][i]
+            abs_err_to_real_continuum_list.append(abs_err_to_real_continuum)
+            print 'abs_err_to_real_continuum, relative_err_to_real_continuum', abs_err_to_real_continuum, relative_err_to_real_continuum
+            raw_input()
+            
+        # Calculate the average error to the real continuum   
+        avg_relative_err_to_real_continuum = sum(relative_err_to_real_continuum_list) / len(relative_err_to_real_continuum_list)
+        avg_abs_err_to_real_continuum = sum(abs_err_to_real_continuum_list) / len(abs_err_to_real_continuum_list)
+        
+        # Append the average errors of this file to the list for all the objects
+        avg_abs_err_to_real_continuum_all.append(avg_abs_err_to_real_continuum)
+        avg_relative_err_to_real_continuum_all.append(avg_relative_err_to_real_continuum)
+        print('Average Relative error of my line to the continuum: %f' % (avg_relative_err_to_real_continuum))
+        print('Chi-squared of my fit = %f' % chi_squared)
+        
+        # Find EWs with my continuum fit
+        myContinuum_half_eqw_list = []
+        myContinuum_half_eqw = science.spectrum.half_EQW_times2(selected_data, continuum_reb_selec_mine, Lyalpha, eqw_limit)
+        print('Ly-alpha half-EQW = %f' % half_eqw)
+        myContinuum_half_eqw_list.append(myContinuum_half_eqw)
+        
+        
+    print len(temps), len(loggs), len(avg_abs_err_to_real_continuum_all), len(avg_relative_err_to_real_continuum_all), len(half_eqw_list), len(myContinuum_half_eqw_list), len(all_chi_squared)
+    # Generate the text file with the chi squared calculations
     f = open(path_results+'planepar_comparison2myContinuum_and_EWs.txt', 'w+')
     print >> f, 'SIGN CONVENTION:   positive = emission   negative = absorption'
-    print >> f, 'Temperature    log g    avg_abs_err_to_real_continuum    avg_relative_err_to_real_continuum_all    real_HalfEW    EW_myContinuum    all_chi_squared'
+    print >> f, 'Temperature    log g    avg_abs_err_to_real_continuum_all    avg_relative_err_to_real_continuum_all    real_HalfEW    EW_myContinuum    all_chi_squared'
     for i in range(0, len(temps)):
         print >> f,  ''
         s = ('%i    %0.2f    %0.3f    %0.3f    %0.3f    %0.3f    %0.3f\n' % 
-             (temps[i], loggs[i], avg_abs_err_to_real_continuum[i], avg_relative_err_to_real_continuum_all[i], half_eqw_list[i], myContinuum_half_eqw_list[i], all_chi_squared[i]))
+             (temps[i], loggs[i], avg_abs_err_to_real_continuum_all[i], avg_relative_err_to_real_continuum_all[i], half_eqw_list[i], myContinuum_half_eqw_list[i], all_chi_squared[i]))
+        #s = ('{:>4} {:>5.2} {:>5.2} {:>5.2} {:>5.2} {:>5.2} {:>5.2}'.format(
+        #    temps[i], loggs[i], avg_abs_err_to_real_continuum_all[i], avg_relative_err_to_real_continuum_all[i], half_eqw_list[i], myContinuum_half_eqw_list[i], all_chi_squared[i]))
+        print s
         f.write(s)
     f.close()
     
@@ -287,6 +329,6 @@ if compare2_real_continuum == True:
                     continuum_reb_selec_data[0], continuum_reb_selec_data[1], 'r--',  # the continuum determined from the rebinned selected data
                     rebinned_continuum_data[0], rebinned_continuum_data[1], 'g:') # the rebinned coninuum determined from the raw selected data
         pyplot.show()
-    
+
 print 'Done!'
 
