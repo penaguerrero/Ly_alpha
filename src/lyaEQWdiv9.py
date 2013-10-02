@@ -357,9 +357,9 @@ for t in leg1.get_texts():
     t.set_fontsize(12)     
 for t in leg2.get_texts():
     t.set_fontsize(12)     
-#pyplot.show()
+pyplot.show()
 
-
+'''
 # Saving the plots
 pyplot.figure(1)
 epsfile = os.path.join(path_plots, "Inst_logAge_NEW4.eps")
@@ -369,7 +369,7 @@ pyplot.figure(2)
 epsfile = os.path.join(path_plots, "Const_logAge_NEW4.eps")
 pyplot.savefig(epsfile)
 pyplot.ion()
-
+'''
 
 print('Done!')
 
