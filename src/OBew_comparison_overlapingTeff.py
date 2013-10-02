@@ -21,12 +21,12 @@ EW as a function of temperature for an effective temperature.
 machine = 'pena'
 
 # Create the file with the EW differences of CMFGEN, TLUTY, and plane-parallel CMFGEN
-create_diffs_file = False
+create_diffs_file = True
 
 # Make and show the comparison plot of EW versus Teff as a function of log g.
 make_comparison_plot = True
 show_plot = True    # If show_plot is active, the saved plot will be empty.
-save_plot = False   # To save the plot show_plot must be off
+save_plot = True   # To save the plot show_plot must be off
 plot_name = 'OvsB_EW_Teff29k_and_higher.eps'
 
 ############################################################################################################
@@ -194,7 +194,7 @@ if make_comparison_plot == True:
     pylab.setp(ltext[1], fontsize=17, color='k')
     pylab.setp(ltext[2], fontsize=17, color='r')
     '''
-    if show_plot == True:
+    if show_plot == False:
         pyplot.show()
     if save_plot ==  True:
         #save the plot
